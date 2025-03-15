@@ -11,23 +11,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getQrCodes, type QrCode } from "./actions";
-
-type GroupedQrCodes = {
-  datetime: string;
-  created_by: string;
-  total: number;
-  used: number;
-  unused: number;
-  expires_at: string | null;
-  codes: QrCode[];
-}
+import { getQrCodeGroups, type QrCodeGroup } from "./actions";
 
 export default function QrCodesPage() {
-  const [qrCodes, setQrCodes] = useState<QrCode[]>([]);
+  const [groups, setGroups] = useState<QrCodeGroup[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -38,47 +28,15 @@ export default function QrCodesPage() {
   const fetchQrCodes = async () => {
     try {
       setLoading(true);
-      const result = await getQrCodes({ pageSize: 1000 });
-      setQrCodes(result.data);
-      setTotal(result.total);
+      const { data, total } = await getQrCodeGroups();
+      setGroups(data);
+      setTotal(total);
     } catch (error) {
       console.error('Failed to fetch QR codes:', error);
     } finally {
       setLoading(false);
     }
   };
-
-  // Group QR codes by created_at datetime
-  const groupedQrCodes = qrCodes.reduce((groups: GroupedQrCodes[], code) => {
-    // Format with date and time
-    const datetime = format(parseISO(code.created_at), 'yyyy-MM-dd HH:mm:ss');
-    const existingGroup = groups.find(g => 
-      g.datetime === datetime && 
-      g.created_by === code.created_by_admin &&
-      g.expires_at === code.expires_at
-    );
-
-    if (existingGroup) {
-      existingGroup.total++;
-      existingGroup.used += code.status === 'used' ? 1 : 0;
-      existingGroup.unused += code.status === 'unused' ? 1 : 0;
-      existingGroup.codes.push(code);
-    } else {
-      groups.push({
-        datetime,
-        created_by: code.created_by_admin,
-        expires_at: code.expires_at,
-        total: 1,
-        used: code.status === 'used' ? 1 : 0,
-        unused: code.status === 'unused' ? 1 : 0,
-        codes: [code]
-      });
-    }
-    return groups;
-  }, []);
-
-  // Sort groups by datetime descending
-  groupedQrCodes.sort((a, b) => b.datetime.localeCompare(a.datetime));
 
   return (
     <DashboardShell>
@@ -110,15 +68,15 @@ export default function QrCodesPage() {
                 <TableRow>
                   <TableCell colSpan={7} className="text-center">Loading...</TableCell>
                 </TableRow>
-              ) : groupedQrCodes.length === 0 ? (
+              ) : groups.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center">No QR codes found</TableCell>
                 </TableRow>
               ) : (
-                groupedQrCodes.map((group) => (
-                  <TableRow key={`${group.datetime}-${group.created_by}-${group.expires_at}`}>
-                    <TableCell>{format(parseISO(group.datetime), 'PPP p')}</TableCell>
-                    <TableCell>{group.created_by}</TableCell>
+                groups.map((group) => (
+                  <TableRow key={`${group.created_at}-${group.created_by_admin}-${group.expires_at}`}>
+                    <TableCell>{format(new Date(group.created_at), 'PPP p')}</TableCell>
+                    <TableCell>{group.created_by_admin}</TableCell>
                     <TableCell>{group.total}</TableCell>
                     <TableCell>{group.used}</TableCell>
                     <TableCell>{group.unused}</TableCell>
@@ -126,7 +84,7 @@ export default function QrCodesPage() {
                       {((group.used / group.total) * 100).toFixed(1)}%
                     </TableCell>
                     <TableCell>
-                      {group.expires_at ? format(parseISO(group.expires_at), 'PPP') : 'Never'}
+                      {group.expires_at ? format(new Date(group.expires_at), 'PPP') : 'Never'}
                     </TableCell>
                   </TableRow>
                 ))
