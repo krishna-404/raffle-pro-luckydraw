@@ -5,7 +5,7 @@ import { DashboardShell } from "@/app/admin/(protected)/components/shell";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
@@ -238,81 +238,93 @@ export default function CreateEventPage() {
                 {fields.map((field, index) => (
                   <Card key={field.id}>
                     <CardContent className="pt-6">
-                      <div className="grid gap-4 sm:grid-cols-2">
-                        <FormField
-                          control={form.control}
-                          name={`prizes.${index}.name`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Prize Name</FormLabel>
-                              <FormControl>
-                                <Input placeholder="iPhone 15 Pro" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name={`prizes.${index}.description`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Description</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Prize description..." {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
+                      <div className="grid grid-cols-[100px_1fr] gap-6">
+                        {/* Image Preview Column */}
                         <FormField
                           control={form.control}
                           name={`prizes.${index}.image`}
                           render={({ field: { value, onChange, ...field } }) => (
-                            <FormItem className="col-span-2">
-                              <FormLabel>Image</FormLabel>
+                            <FormItem>
                               <FormControl>
-                                <div className="flex items-center gap-4">
-                                  <Input
-                                    type="file"
-                                    accept={ACCEPTED_IMAGE_TYPES.join(",")}
-                                    onChange={(e) => {
-                                      const file = e.target.files?.[0] ?? null;
-                                      onChange(file);
-                                    }}
-                                    {...field}
-                                  />
-                                  {value && (
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                      <ImageIcon className="h-4 w-4" />
-                                      {value.name}
-                                    </div>
-                                  )}
+                                <div className="space-y-4">
+                                  <div className="relative aspect-square rounded-lg border-2 border-dashed border-gray-200 bg-gray-50">
+                                    {value ? (
+                                      <div className="absolute inset-0">
+                                        <img
+                                          src={URL.createObjectURL(value)}
+                                          alt="Preview"
+                                          className="h-full w-full rounded-lg object-cover"
+                                        />
+                                      </div>
+                                    ) : (
+                                      <div className="flex h-full items-center justify-center">
+                                        <ImageIcon className="h-8 w-8 text-gray-400" />
+                                      </div>
+                                    )}
+                                    <Input
+                                      type="file"
+                                      accept={ACCEPTED_IMAGE_TYPES.join(",")}
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0] ?? null;
+                                        onChange(file);
+                                      }}
+                                      className="absolute inset-0 cursor-pointer opacity-0"
+                                      {...field}
+                                    />
+                                  </div>
+                                  <FormMessage />
                                 </div>
                               </FormControl>
-                              <FormDescription>
-                                Upload a prize image (max 5MB, JPG, PNG or WebP)
-                              </FormDescription>
-                              <FormMessage />
                             </FormItem>
                           )}
                         />
-                      </div>
 
-                      {index > 0 && (
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="sm"
-                          className="mt-4"
-                          onClick={() => remove(index)}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Remove Prize
-                        </Button>
-                      )}
+                        {/* Name and Description Column */}
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                              control={form.control}
+                              name={`prizes.${index}.name`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Prize Name</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="iPhone 15 Pro" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name={`prizes.${index}.description`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Description</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Prize description..." {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+
+                          {index > 0 && (
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => remove(index)}
+                              className="mt-2"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Remove Prize
+                            </Button>
+                          )}
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
