@@ -9,8 +9,8 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
-    // Don't protect login page
-    if (request.nextUrl.pathname === '/admin/login') {
+    // Don't protect login and register pages
+    if (request.nextUrl.pathname === '/admin/login' || request.nextUrl.pathname === '/admin/register') {
       return NextResponse.next();
     }
 
@@ -30,7 +30,7 @@ export async function middleware(request: NextRequest) {
 
     // Check if user is an admin
     const { data: profile } = await supabase
-      .from('admin_profiles')
+      .from('admin_users')
       .select('*')
       .eq('email', session.user.email)
       .single();

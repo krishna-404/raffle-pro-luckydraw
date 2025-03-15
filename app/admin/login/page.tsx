@@ -3,16 +3,41 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useFormState } from "react-dom";
-import { loginAction, type LoginState } from "./actions";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from 'zod';
+import { loginAction } from "./actions";
 
-const initialState: LoginState = {
-  error: null,
-};
+export const loginSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+});
+
+export type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function AdminLoginPage() {
-  const [state, formAction] = useFormState(loginAction, initialState);
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+  });
+
+  const onSubmit = async (data: LoginFormData) => {
+    setError(null);
+    const result = await loginAction(data);
+    if (result.error) {
+      setError(result.error);
+    } else if (result.success) {
+      router.push('/admin/dashboard');
+    }
+  };
 
   return (
     <div className="container relative min-h-screen flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-2 lg:px-0">
@@ -39,35 +64,39 @@ export default function AdminLoginPage() {
               Enter your credentials to access the admin panel
             </p>
           </div>
-          <form action={formAction} className="space-y-4">
-            {state?.error && (
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {error && (
               <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-600">
-                {state.error}
+                {error}
               </div>
             )}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
-                name="email"
+                {...register('email')}
                 type="email"
                 placeholder="admin@example.com"
-                required
                 className="w-full"
               />
+              {errors.email && (
+                <p className="text-sm text-red-600">{errors.email.message}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
-                name="password"
+                {...register('password')}
                 type="password"
-                required
                 className="w-full"
               />
+              {errors.password && (
+                <p className="text-sm text-red-600">{errors.password.message}</p>
+              )}
             </div>
-            <Button type="submit" className="w-full">
-              Sign In
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
         </div>

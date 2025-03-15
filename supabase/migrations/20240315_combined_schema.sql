@@ -59,6 +59,23 @@ CREATE TABLE IF NOT EXISTS event_entries (
   CONSTRAINT valid_pincode CHECK (pincode >= 100000 AND pincode <= 999999)
 );
 
+-- Create registration_attempts table
+CREATE TABLE registration_attempts (
+  id BIGSERIAL PRIMARY KEY,
+  ip_address TEXT NOT NULL,
+  attempt_count INTEGER NOT NULL DEFAULT 0,
+  last_attempt TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  is_blocked BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Add unique constraint on ip_address
+CREATE UNIQUE INDEX registration_attempts_ip_address_idx ON registration_attempts(ip_address);
+
+-- Add index on last_attempt for efficient cleanup
+CREATE INDEX registration_attempts_last_attempt_idx ON registration_attempts(last_attempt);
+
 -- Create indexes for better query performance
 CREATE INDEX IF NOT EXISTS idx_events_dates ON events(start_date, end_date);
 CREATE INDEX IF NOT EXISTS idx_qr_codes_expires_at ON qr_codes(expires_at);
@@ -72,6 +89,7 @@ ALTER TABLE events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE prizes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE qr_codes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE event_entries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE registration_attempts ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies if they exist
 DROP POLICY IF EXISTS "Admin users can view their own data" ON admin_users;
@@ -82,19 +100,22 @@ DROP POLICY IF EXISTS "Public can view prizes for active events" ON prizes;
 DROP POLICY IF EXISTS "Admin users can manage their QR codes" ON qr_codes;
 DROP POLICY IF EXISTS "Admin users can view entries for their events" ON event_entries;
 DROP POLICY IF EXISTS "Public can create entries for active events" ON event_entries;
+DROP POLICY IF EXISTS "Admin users can manage registration attempts" ON registration_attempts;
 
 -- Admin users policies
-CREATE POLICY "Admin users can view all admin data"
+DROP POLICY IF EXISTS "Admin users can view all admin data" ON admin_users;
+CREATE POLICY "Anyone can view admin data"
   ON admin_users FOR SELECT
-  USING (EXISTS (
-    SELECT 1 FROM admin_users WHERE email = auth.uid()::text
-  ));
+  USING (true);
 
 -- Events policies
+DROP POLICY IF EXISTS "Admin users can manage all events" ON events;
 CREATE POLICY "Admin users can manage all events"
   ON events FOR ALL
   USING (EXISTS (
-    SELECT 1 FROM admin_users WHERE email = auth.uid()::text
+    SELECT 1 FROM admin_users 
+    JOIN auth.users ON auth.users.email = admin_users.email 
+    WHERE auth.users.id = auth.uid()
   ));
 
 CREATE POLICY "Public can view active events"
@@ -102,10 +123,13 @@ CREATE POLICY "Public can view active events"
   USING (current_date BETWEEN start_date AND end_date);
 
 -- Prizes policies
+DROP POLICY IF EXISTS "Admin users can manage all prizes" ON prizes;
 CREATE POLICY "Admin users can manage all prizes"
   ON prizes FOR ALL
   USING (EXISTS (
-    SELECT 1 FROM admin_users WHERE email = auth.uid()::text
+    SELECT 1 FROM admin_users 
+    JOIN auth.users ON auth.users.email = admin_users.email 
+    WHERE auth.users.id = auth.uid()
   ));
 
 CREATE POLICY "Public can view prizes for active events"
@@ -117,17 +141,23 @@ CREATE POLICY "Public can view prizes for active events"
   ));
 
 -- QR codes policies
+DROP POLICY IF EXISTS "Admin users can manage all QR codes" ON qr_codes;
 CREATE POLICY "Admin users can manage all QR codes"
   ON qr_codes FOR ALL
   USING (EXISTS (
-    SELECT 1 FROM admin_users WHERE email = auth.uid()::text
+    SELECT 1 FROM admin_users 
+    JOIN auth.users ON auth.users.email = admin_users.email 
+    WHERE auth.users.id = auth.uid()
   ));
 
 -- Event entries policies
+DROP POLICY IF EXISTS "Admin users can view all entries" ON event_entries;
 CREATE POLICY "Admin users can view all entries"
   ON event_entries FOR SELECT
   USING (EXISTS (
-    SELECT 1 FROM admin_users WHERE email = auth.uid()::text
+    SELECT 1 FROM admin_users 
+    JOIN auth.users ON auth.users.email = admin_users.email 
+    WHERE auth.users.id = auth.uid()
   ));
 
 CREATE POLICY "Public can create entries for active events"
@@ -137,6 +167,26 @@ CREATE POLICY "Public can create entries for active events"
     WHERE events.id = event_entries.event_id 
     AND current_date BETWEEN events.start_date AND events.end_date
   ));
+
+-- Registration attempts policies
+DROP POLICY IF EXISTS "Admin users can manage registration attempts" ON registration_attempts;
+DROP POLICY IF EXISTS "Anyone can create registration attempts" ON registration_attempts;
+DROP POLICY IF EXISTS "Anyone can view their own registration attempts" ON registration_attempts;
+DROP POLICY IF EXISTS "Admin users can manage all registration attempts" ON registration_attempts;
+
+-- Simple policies that allow registration attempts without complex auth checks
+CREATE POLICY "Enable insert for registration attempts"
+  ON registration_attempts FOR INSERT
+  WITH CHECK (true);
+
+CREATE POLICY "Enable select for registration attempts"
+  ON registration_attempts FOR SELECT
+  USING (true);
+
+CREATE POLICY "Enable update for registration attempts"
+  ON registration_attempts FOR UPDATE
+  USING (true)
+  WITH CHECK (true);
 
 -- Create trigger to sync auth.users with admin_users
 CREATE OR REPLACE FUNCTION public.handle_new_user() 
@@ -166,5 +216,15 @@ BEGIN
     FROM public.admin_users 
     WHERE email = user_email
   );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to clean up old registration attempts
+CREATE OR REPLACE FUNCTION cleanup_registration_attempts()
+RETURNS void AS $$
+BEGIN
+  -- Delete attempts older than 24 hours that aren't blocked
+  DELETE FROM registration_attempts
+  WHERE NOT is_blocked AND last_attempt < NOW() - INTERVAL '24 hours';
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER; 
