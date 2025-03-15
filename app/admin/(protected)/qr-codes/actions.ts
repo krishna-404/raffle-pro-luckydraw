@@ -92,10 +92,11 @@ export async function getQrCodes({
     throw new Error(error.message);
   }
 
+  console.log({data});
   // Transform the data to include the status
   const qrCodes = data.map((qrCode: any) => ({
     ...qrCode,
-    status: qrCode.entry ? 'used' : 'unused',
+    status: qrCode.entry.length ? 'used' : 'unused',
     entry: qrCode.entry?.[0], // Since it's a one-to-one relationship through event_entries
   }));
 
