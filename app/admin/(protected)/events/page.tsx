@@ -109,7 +109,7 @@ export default function EventsPage() {
                         {event.status}
                       </span>
                     </TableCell>
-                    <TableCell>{event.entry_count}</TableCell>
+                    {/* <TableCell>{event.entry_count}</TableCell> */}
                     <TableCell>{event.created_by_admin}</TableCell>
                     <TableCell>{format(new Date(event.created_at), 'PPp')}</TableCell>
                   </TableRow>

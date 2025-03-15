@@ -110,6 +110,6 @@ export default function Home() {
           </form>
         </div>
       </section>
-    </main>
+      </main>
   );
 }
