@@ -75,6 +75,7 @@ export default function EventsPage() {
                 <TableHead>End Date</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Entries</TableHead>
+                <TableHead>Prizes</TableHead>
                 <TableHead>Created By</TableHead>
                 <TableHead>Created At</TableHead>
               </TableRow>
@@ -109,7 +110,8 @@ export default function EventsPage() {
                         {event.status}
                       </span>
                     </TableCell>
-                    {/* <TableCell>{event.entry_count}</TableCell> */}
+                    <TableCell>{event.entry_count}</TableCell>
+                    <TableCell>{event.prize_count}</TableCell>
                     <TableCell>{event.created_by_admin}</TableCell>
                     <TableCell>{format(new Date(event.created_at), 'PPp')}</TableCell>
                   </TableRow>

@@ -12,6 +12,7 @@ export type Event = {
   created_at: string;
   updated_at: string;
   entry_count: number;
+  prize_count: number;
   status: 'upcoming' | 'active' | 'ended';
 };
 
@@ -22,7 +23,8 @@ export async function getEvents(): Promise<{ data: Event[]; total: number }> {
     .from('events')
     .select(`
       *,
-      entry_count:event_entries(count)
+      entry_count:event_entries(count),
+      prize_count:prizes(count)
     `)
     .order('start_date', { ascending: false });
 
@@ -33,7 +35,8 @@ export async function getEvents(): Promise<{ data: Event[]; total: number }> {
   const now = new Date();
   const eventsWithStatus = data.map(event => ({
     ...event,
-    entry_count: event.entry_count || 0,
+    entry_count: event.entry_count?.[0]?.count || 0,
+    prize_count: event.prize_count?.[0]?.count || 0,
     status: new Date(event.start_date) > now 
       ? 'upcoming' 
       : new Date(event.end_date) < now 
