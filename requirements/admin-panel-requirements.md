@@ -1,6 +1,15 @@
 # Admin Panel Requirements
 
-1. Admin Dashboard
+1. Admin Login 
+   1. Route: `/admin/login`
+   2. The admin can login using their email & password.
+2. Admin Register
+   1. Route: `/admin/register`
+   2. The admin can register using their email & password.
+   3. It needs a special token which is available in the environment variables. Only if this token is provided & matches, a new admin can register.
+   4. This token should not be exposed to the client side. Take special care to ensure this.
+   5. Have strict rate limiting on this route. Permanently block any IP which tries to register more than 2 times.
+3. Admin Dashboard (Authenticated)
    Has the following sections:
    1. QR Code Management
       1. A section to add a bunch of new QR codes & print them.
