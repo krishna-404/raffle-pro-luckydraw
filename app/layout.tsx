@@ -1,4 +1,4 @@
-import { Header } from "@/components/layout/header";
+import { RootLayoutWrapper } from "@/components/layout/root-layout";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
@@ -18,8 +18,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.className} ${playfair.variable}`}>
       <body className="min-h-screen flex flex-col">
-        <Header />
-        {children}
+        <RootLayoutWrapper>{children}</RootLayoutWrapper>
       </body>
     </html>
   );
