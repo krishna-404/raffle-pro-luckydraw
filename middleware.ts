@@ -19,12 +19,10 @@ export async function middleware(request: NextRequest) {
     // Create a Supabase client
     const supabase = createClient(request);
 
-    // Check if we have a session
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    // Check if we have a valid user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-    if (!session) {
+    if (userError || !user) {
       return NextResponse.redirect(new URL('/admin/login', request.url));
     }
 
@@ -32,7 +30,7 @@ export async function middleware(request: NextRequest) {
     const { data: profile } = await supabase
       .from('admin_users')
       .select('*')
-      .eq('email', session.user.email)
+      .eq('email', user.email)
       .single();
 
     if (!profile) {

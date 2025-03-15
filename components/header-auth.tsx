@@ -1,9 +1,11 @@
+'use server';
+
 import { signOutAction } from "@/app/actions";
 import { hasEnvVars } from "@/utils/supabase/check-env-vars";
+import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { createClient } from "@/utils/supabase/server";
 
 export default async function AuthButton() {
   const supabase = await createClient();
@@ -67,4 +69,10 @@ export default async function AuthButton() {
       </Button>
     </div>
   );
+}
+
+export async function getAuthUser() {
+  const supabase = await createClient();
+  const { data: { user }, error } = await supabase.auth.getUser();
+  return { user, error };
 }
