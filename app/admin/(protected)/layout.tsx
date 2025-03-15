@@ -1,8 +1,8 @@
+import { signOut } from "@/app/admin/(protected)/actions";
 import { Button } from "@/components/ui/button";
 import { CalendarDays, Gift, Home, LogOut, QrCode, Users } from "lucide-react";
 import { Inter, Playfair_Display } from "next/font/google";
 import Link from "next/link";
-import { signOut } from "./actions";
 
 const inter = Inter({ subsets: ["latin"] });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-serif" });
@@ -35,7 +35,7 @@ const sidebarItems = [
   },
 ];
 
-export default function AdminLayout({
+export default function ProtectedLayout({
   children,
 }: {
   children: React.ReactNode;

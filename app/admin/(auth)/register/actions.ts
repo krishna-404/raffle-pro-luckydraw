@@ -1,6 +1,6 @@
 'use server';
 
-import { type RegisterFormData } from '@/app/admin/register/page';
+import { type RegisterFormData } from '@/app/admin/(auth)/register/page';
 import { createClient } from '@/utils/supabase/server';
 import { headers } from 'next/headers';
 

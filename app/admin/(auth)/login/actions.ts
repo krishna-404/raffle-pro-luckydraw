@@ -1,6 +1,6 @@
 'use server';
 
-import { LoginFormData } from '@/app/admin/login/page';
+import { LoginFormData } from '@/app/admin/(auth)/login/page';
 import { createClient } from '@/utils/supabase/server';
 
 export async function loginAction(data: LoginFormData): Promise<{ error: string | null; success?: boolean }> {

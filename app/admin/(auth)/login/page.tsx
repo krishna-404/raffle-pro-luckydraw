@@ -35,7 +35,7 @@ export default function AdminLoginPage() {
     if (result.error) {
       setError(result.error);
     } else if (result.success) {
-      router.push('/admin/dashboard');
+      router.push('/admin');
     }
   };
 
