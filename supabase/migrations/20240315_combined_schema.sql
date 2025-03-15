@@ -84,26 +84,28 @@ DROP POLICY IF EXISTS "Admin users can view entries for their events" ON event_e
 DROP POLICY IF EXISTS "Public can create entries for active events" ON event_entries;
 
 -- Admin users policies
-CREATE POLICY "Admin users can view their own data"
+CREATE POLICY "Admin users can view all admin data"
   ON admin_users FOR SELECT
-  USING (auth.uid()::text = email);
+  USING (EXISTS (
+    SELECT 1 FROM admin_users WHERE email = auth.uid()::text
+  ));
 
 -- Events policies
-CREATE POLICY "Admin users can manage their own events"
+CREATE POLICY "Admin users can manage all events"
   ON events FOR ALL
-  USING (auth.uid()::text = created_by_admin);
+  USING (EXISTS (
+    SELECT 1 FROM admin_users WHERE email = auth.uid()::text
+  ));
 
 CREATE POLICY "Public can view active events"
   ON events FOR SELECT
   USING (current_date BETWEEN start_date AND end_date);
 
 -- Prizes policies
-CREATE POLICY "Admin users can manage prizes for their events"
+CREATE POLICY "Admin users can manage all prizes"
   ON prizes FOR ALL
   USING (EXISTS (
-    SELECT 1 FROM events 
-    WHERE events.id = prizes.event_id 
-    AND events.created_by_admin = auth.uid()::text
+    SELECT 1 FROM admin_users WHERE email = auth.uid()::text
   ));
 
 CREATE POLICY "Public can view prizes for active events"
@@ -115,17 +117,17 @@ CREATE POLICY "Public can view prizes for active events"
   ));
 
 -- QR codes policies
-CREATE POLICY "Admin users can manage their QR codes"
+CREATE POLICY "Admin users can manage all QR codes"
   ON qr_codes FOR ALL
-  USING (auth.uid()::text = created_by_admin);
+  USING (EXISTS (
+    SELECT 1 FROM admin_users WHERE email = auth.uid()::text
+  ));
 
 -- Event entries policies
-CREATE POLICY "Admin users can view entries for their events"
+CREATE POLICY "Admin users can view all entries"
   ON event_entries FOR SELECT
   USING (EXISTS (
-    SELECT 1 FROM events 
-    WHERE events.id = event_entries.event_id 
-    AND events.created_by_admin = auth.uid()::text
+    SELECT 1 FROM admin_users WHERE email = auth.uid()::text
   ));
 
 CREATE POLICY "Public can create entries for active events"
