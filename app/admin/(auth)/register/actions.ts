@@ -4,83 +4,90 @@ import { type RegisterFormData } from '@/app/admin/(auth)/register/page';
 import { createClient } from '@/utils/supabase/server';
 import { headers } from 'next/headers';
 
+const MAX_FAILED_ATTEMPTS = 5;
+
 export async function registerAction(data: RegisterFormData): Promise<{ error: string | null; success?: boolean }> {
   const headersList = await headers();
   const supabase = await createClient();
 
   try {
-    // Get IP address from X-Forwarded-For header
+    // Get IP address and user agent
     const forwardedFor = headersList.get('x-forwarded-for');
     const ip = forwardedFor ? forwardedFor.split(',')[0] : 'unknown';
+    const userAgent = headersList.get('user-agent') || 'unknown';
 
-    // Validate registration token
-    if (data.token !== process.env.ADMIN_REGISTRATION_TOKEN) {
-      return { error: 'Invalid registration token' };
-    }
-
-    // Check registration attempts
-    const { data: attempts, error: attemptsError } = await supabase
+    // Get recent failed attempts using database time
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    
+    const { data: recentAttempts, error: attemptsError } = await supabase
       .from('registration_attempts')
       .select('*')
       .eq('ip_address', ip)
-      .single();
+      .eq('success', false)
+      .gte('created_at', oneHourAgo.toISOString())
+      .limit(MAX_FAILED_ATTEMPTS);
 
-    console.log({ attempts, attemptsError });
-
-    if (attemptsError && attemptsError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
-      return { error: 'Error checking registration attempts' };
+    console.log({attemptsError});
+    if (attemptsError) {
+      console.error('Error checking registration attempts:', attemptsError);
+      return { error: 'Unable to process registration' };
     }
 
-    // If IP is blocked, reject registration
-    if (attempts?.is_blocked) {
-      return { error: 'Registration blocked due to too many attempts' };
-    }
-
-    // Get current timestamp
-    const now = new Date();
-    const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-
-    // If attempts exist and last attempt was within 24 hours
-    if (attempts && new Date(attempts.last_attempt) > twentyFourHoursAgo) {
-      // If too many attempts, block the IP
-      if (attempts.attempt_count >= 2) {
-        await supabase
-          .from('registration_attempts')
-          .update({ is_blocked: true })
-          .eq('ip_address', ip);
-        return { error: 'Too many registration attempts. Your IP has been blocked.' };
-      }
-
-      // Increment attempt count
+    // Check if too many failed attempts
+    if (recentAttempts && recentAttempts.length >= MAX_FAILED_ATTEMPTS) {
       await supabase
         .from('registration_attempts')
-        .update({
-          attempt_count: attempts.attempt_count + 1,
-          last_attempt: now.toISOString(),
-        })
-        .eq('ip_address', ip);
-    } else {
-      // Create new attempt record
-      await supabase
-        .from('registration_attempts')
-        .upsert({
-          ip_address: ip,
-          attempt_count: 1,
-          last_attempt: now.toISOString(),
-          is_blocked: false,
+        .insert({ 
+          ip_address: ip, 
+          user_agent: userAgent, 
+          success: false,
+          failure_reason: 'Too many failed attempts'
         });
+      return { error: 'Too many failed attempts. Please try again later.' };
+    }
+
+    // Validate registration token
+    if (data.token !== process.env.ADMIN_REGISTRATION_TOKEN) {
+      await supabase
+        .from('registration_attempts')
+        .insert({ 
+          ip_address: ip, 
+          user_agent: userAgent, 
+          success: false,
+          failure_reason: 'Invalid registration token'
+        });
+      return { error: 'Invalid registration token' };
     }
 
     console.log({data});
     // Attempt to sign up
-    const { error: signUpError } = await supabase.auth.signUp({
+    const { data: authData, error: signUpError } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
     });
 
+    console.log('signUpError', signUpError);
     if (signUpError) {
+      await supabase
+        .from('registration_attempts')
+        .insert({ 
+          ip_address: ip, 
+          user_agent: userAgent, 
+          success: false,
+          failure_reason: signUpError.message
+        });
       return { error: signUpError.message };
     }
+
+    // Log the successful attempt
+    await supabase
+      .from('registration_attempts')
+      .insert({ 
+        ip_address: ip, 
+        user_agent: userAgent, 
+        success: true,
+        failure_reason: null
+      });
 
     return { error: null, success: true };
   } catch (error) {
