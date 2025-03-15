@@ -27,6 +27,7 @@ import {
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CalendarIcon, ChevronDown } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getQrCodes, type QrCode, type QrCodeFilters, type SortBy } from "./actions";
 
@@ -74,7 +75,9 @@ export default function QrCodesPage() {
         heading="QR Codes" 
         text="Manage your QR codes and track their usage."
       >
-        <Button>Generate QR Codes</Button>
+        <Button asChild>
+          <Link href="/admin/qr-codes/generate">Generate QR Codes</Link>
+        </Button>
       </DashboardHeader>
 
       <div className="space-y-4">

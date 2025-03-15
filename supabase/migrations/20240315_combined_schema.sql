@@ -148,11 +148,7 @@ CREATE POLICY "Anyone can view admin data"
 -- Events policies
 CREATE POLICY "Admin users can manage all events"
   ON events FOR ALL
-  USING (EXISTS (
-    SELECT 1 FROM admin_users 
-    JOIN auth.users ON auth.users.email = admin_users.email 
-    WHERE auth.users.id = auth.uid()
-  ));
+  USING (auth.uid() IS NOT NULL);
 
 CREATE POLICY "Public can view active events"
   ON events FOR SELECT
@@ -161,11 +157,7 @@ CREATE POLICY "Public can view active events"
 -- Prizes policies
 CREATE POLICY "Admin users can manage all prizes"
   ON prizes FOR ALL
-  USING (EXISTS (
-    SELECT 1 FROM admin_users 
-    JOIN auth.users ON auth.users.email = admin_users.email 
-    WHERE auth.users.id = auth.uid()
-  ));
+  USING (auth.uid() IS NOT NULL);
 
 CREATE POLICY "Public can view prizes for active events"
   ON prizes FOR SELECT
@@ -178,20 +170,12 @@ CREATE POLICY "Public can view prizes for active events"
 -- QR codes policies
 CREATE POLICY "Admin users can manage all QR codes"
   ON qr_codes FOR ALL
-  USING (EXISTS (
-    SELECT 1 FROM admin_users 
-    JOIN auth.users ON auth.users.email = admin_users.email 
-    WHERE auth.users.id = auth.uid()
-  ));
+  USING (auth.uid() IS NOT NULL);
 
 -- Event entries policies
 CREATE POLICY "Admin users can view all entries"
   ON event_entries FOR SELECT
-  USING (EXISTS (
-    SELECT 1 FROM admin_users 
-    JOIN auth.users ON auth.users.email = admin_users.email 
-    WHERE auth.users.id = auth.uid()
-  ));
+  USING (auth.uid() IS NOT NULL);
 
 CREATE POLICY "Public can create entries for active events"
   ON event_entries FOR INSERT
