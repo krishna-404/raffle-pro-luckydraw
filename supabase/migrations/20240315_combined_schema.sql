@@ -1,3 +1,6 @@
+-- Set timezone to India
+SET timezone = 'Asia/Kolkata';
+
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
@@ -5,7 +8,8 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS admin_users (
   email VARCHAR PRIMARY KEY,
   password VARCHAR NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- Create events table
@@ -17,6 +21,7 @@ CREATE TABLE IF NOT EXISTS events (
   start_date DATE NOT NULL,
   end_date DATE NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
   CONSTRAINT unique_start_date UNIQUE(start_date),
   CONSTRAINT unique_end_date UNIQUE(end_date),
   CONSTRAINT valid_dates CHECK (end_date >= start_date)
@@ -30,7 +35,8 @@ CREATE TABLE IF NOT EXISTS prizes (
   name VARCHAR NOT NULL,
   description TEXT,
   image_url TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- Create QR codes table
@@ -38,7 +44,8 @@ CREATE TABLE IF NOT EXISTS qr_codes (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_by_admin VARCHAR REFERENCES admin_users(email),
   expires_at TIMESTAMP WITH TIME ZONE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- Create event entries table
@@ -56,6 +63,7 @@ CREATE TABLE IF NOT EXISTS event_entries (
   request_ip_address VARCHAR NOT NULL,
   request_user_agent TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
   CONSTRAINT valid_pincode CHECK (pincode >= 100000 AND pincode <= 999999)
 );
 
@@ -227,4 +235,39 @@ BEGIN
   DELETE FROM registration_attempts
   WHERE NOT is_blocked AND last_attempt < NOW() - INTERVAL '24 hours';
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER; 
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create trigger function for updating updated_at
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = timezone('utc'::text, now());
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Create triggers for each table
+CREATE TRIGGER update_admin_users_updated_at
+    BEFORE UPDATE ON admin_users
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_events_updated_at
+    BEFORE UPDATE ON events
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_prizes_updated_at
+    BEFORE UPDATE ON prizes
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_qr_codes_updated_at
+    BEFORE UPDATE ON qr_codes
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_event_entries_updated_at
+    BEFORE UPDATE ON event_entries
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column(); 

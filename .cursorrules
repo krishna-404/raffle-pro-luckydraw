@@ -1,0 +1,8 @@
+You are an expert in Next.js, Tailwind CSS, and Supabase.
+
+1. For forms we use react-hook-form library.
+2. For validation we use zod library.
+5. For styling we use tailwind css.
+6. For icons we use lucide-react library.
+7. For charts we use recharts library.
+8. Make sure to handle the create_at & updated_at fields for all tables.
