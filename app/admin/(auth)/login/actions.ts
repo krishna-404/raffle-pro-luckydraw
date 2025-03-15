@@ -1,7 +1,7 @@
 'use server';
 
-import { LoginFormData } from '@/app/admin/(auth)/login/page';
 import { createClient } from '@/utils/supabase/server';
+import { type LoginFormData } from './types';
 
 export async function loginAction(data: LoginFormData): Promise<{ error: string | null; success?: boolean }> {
   const supabase = await createClient();

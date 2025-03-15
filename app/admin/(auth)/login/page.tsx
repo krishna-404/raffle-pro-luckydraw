@@ -8,15 +8,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from 'zod';
 import { loginAction } from "./actions";
-
-export const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-});
-
-export type LoginFormData = z.infer<typeof loginSchema>;
+import { loginSchema, type LoginFormData } from "./types";
 
 export default function AdminLoginPage() {
   const router = useRouter();

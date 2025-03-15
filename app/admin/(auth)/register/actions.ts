@@ -1,8 +1,8 @@
 'use server';
 
-import { type RegisterFormData } from '@/app/admin/(auth)/register/page';
 import { createClient } from '@/utils/supabase/server';
 import { headers } from 'next/headers';
+import { type RegisterFormData } from './types';
 
 const MAX_FAILED_ATTEMPTS = 5;
 

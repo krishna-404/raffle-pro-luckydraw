@@ -8,16 +8,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from 'zod';
 import { registerAction } from "./actions";
-
-export const registerSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  token: z.string().min(1, 'Registration token is required'),
-});
-
-export type RegisterFormData = z.infer<typeof registerSchema>;
+import { registerSchema, type RegisterFormData } from "./types";
 
 export default function AdminRegisterPage() {
   const router = useRouter();
