@@ -6,3 +6,5 @@ You are an expert in Next.js, Tailwind CSS, and Supabase.
 6. For icons we use lucide-react library.
 7. For charts we use recharts library.
 8. Make sure to handle the create_at & updated_at fields for all tables.
+9. Dont remove descriptive comments from the code.
+10. Always handle errors gracefully in the code & display meaningful error messages in the frontend.
