@@ -38,20 +38,31 @@ const prizeSchema = z.object({
 const formSchema = z.object({
   name: z.string().min(1, "Event name is required"),
   description: z.string(),
-  // Validate start date to ensure it's not in the past
   start_date: z.date({
     required_error: "Start date is required",
   }).refine(date => !isBefore(date, startOfDay(new Date())), "Start date must be today or in the future"),
-  // Validate end date to ensure it's not in the past
   end_date: z.date({
     required_error: "End date is required",
   }).refine(date => !isBefore(date, startOfDay(new Date())), "End date must be today or in the future"),
   prizes: z.array(prizeSchema)
     .min(1, "At least one prize is required")
     .max(10, "Maximum 10 prizes allowed"),
-// Ensure end date is not before start date
-}).refine(data => !isBefore(data.end_date, data.start_date), {
-  message: "End date must be on or after start date",
+}).refine(data => {
+  // Convert dates to UTC midnight for comparison
+  const startUtc = new Date(Date.UTC(
+    data.start_date.getFullYear(),
+    data.start_date.getMonth(),
+    data.start_date.getDate()
+  ));
+  const endUtc = new Date(Date.UTC(
+    data.end_date.getFullYear(),
+    data.end_date.getMonth(),
+    data.end_date.getDate()
+  ));
+  
+  return startUtc.getTime() < endUtc.getTime();
+}, {
+  message: "End date must be after start date",
   path: ["end_date"],
 });
 
@@ -247,9 +258,30 @@ export default function CreateEventPage() {
                             mode="single"
                             selected={field.value}
                             onSelect={(date) => handleDateSelect(date, field.onChange)}
-                            disabled={(date) =>
-                              date ? isBefore(date, startOfDay(new Date())) : false
-                            }
+                            disabled={(date) => {
+                              const today = startOfDay(new Date());
+                              const startDate = form.getValues('start_date');
+                              
+                              // Disable if date is before today
+                              if (date && isBefore(date, today)) return true;
+                              
+                              // Disable if date is same as or before start date
+                              if (date && startDate) {
+                                const startUtc = new Date(Date.UTC(
+                                  startDate.getFullYear(),
+                                  startDate.getMonth(),
+                                  startDate.getDate()
+                                ));
+                                const dateUtc = new Date(Date.UTC(
+                                  date.getFullYear(),
+                                  date.getMonth(),
+                                  date.getDate()
+                                ));
+                                return dateUtc.getTime() <= startUtc.getTime();
+                              }
+                              
+                              return false;
+                            }}
                             initialFocus
                           />
                         </PopoverContent>
