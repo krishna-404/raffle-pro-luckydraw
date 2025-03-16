@@ -11,10 +11,27 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { format } from "date-fns";
+import { format, subDays } from "date-fns";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getQrCodeGroups, type QrCodeGroup } from "./actions";
+
+// Helper function to adjust UTC midnight to display the correct date
+function formatExpiryDate(dateString: string | null): string {
+  if (!dateString) return 'Never';
+  
+  // Parse the UTC date
+  const utcDate = new Date(dateString);
+  
+  // If it's 23:59:59 UTC (end of day), subtract a day to get the correct day
+  // This handles the case where we store the end of day in UTC but need to display
+  // the actual day that was selected
+  if (utcDate.getUTCHours() === 23 && utcDate.getUTCMinutes() === 59) {
+    return format(subDays(utcDate, 1), 'PPP');
+  }
+  
+  return format(utcDate, 'PPP');
+}
 
 export default function QrCodesPage() {
   const [groups, setGroups] = useState<QrCodeGroup[]>([]);
@@ -84,7 +101,7 @@ export default function QrCodesPage() {
                       {((group.used / group.total) * 100).toFixed(1)}%
                     </TableCell>
                     <TableCell>
-                      {group.expires_at ? format(new Date(group.expires_at), 'PPP') : 'Never'}
+                      {formatExpiryDate(group.expires_at)}
                     </TableCell>
                   </TableRow>
                 ))

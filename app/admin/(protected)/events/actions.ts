@@ -65,6 +65,11 @@ export async function getEvents(): Promise<{ data: Event[]; total: number }> {
       ? event.winner_count.filter((entry: EntryWithPrize) => entry.prize_id !== null).length 
       : 0;
     
+    // For end date comparison, we need to set the time to the end of day (23:59:59.999)
+    // to ensure the event is considered active until the end of its end date
+    const endDate = new Date(event.end_date);
+    endDate.setHours(23, 59, 59, 999);
+    
     return {
       ...event,
       entry_count: event.entry_count?.[0]?.count || 0,
@@ -72,7 +77,7 @@ export async function getEvents(): Promise<{ data: Event[]; total: number }> {
       winner_count: winnerCount,
       status: new Date(event.start_date) > now 
         ? 'upcoming' 
-        : new Date(event.end_date) < now 
+        : endDate < now 
           ? 'ended' 
           : 'active'
     };

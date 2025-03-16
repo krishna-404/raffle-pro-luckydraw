@@ -10,22 +10,28 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
+import { format, isBefore, startOfDay } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { generateQrCodes } from "./actions";
 
 const formSchema = z.object({
   count: z.number().min(1).max(1000),
-  expiresAt: z.date().optional(),
+  expiresAt: z.date().optional().refine(
+    date => !date || !isBefore(date, startOfDay(new Date())),
+    "Expiry date must be today or in the future"
+  ),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
 export default function GenerateQrCodesPage() {
   const router = useRouter();
+  const [displayDate, setDisplayDate] = useState<Date | undefined>(undefined);
+  
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -41,6 +47,28 @@ export default function GenerateQrCodesPage() {
     } catch (error) {
       console.error('Failed to generate QR codes:', error);
     }
+  };
+
+  const handleDateSelect = (date: Date | undefined, onChange: (date: Date | undefined) => void) => {
+    if (!date) {
+      setDisplayDate(undefined);
+      onChange(undefined);
+      return;
+    }
+
+    // Save the original date for display purposes
+    setDisplayDate(date);
+    
+    // Extract the date components from the selected date
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const day = date.getDate();
+    
+    // Create a new date at the END of the day (23:59:59.999) in UTC
+    // This ensures QR codes expire at the end of the selected day
+    const utcDate = new Date(Date.UTC(year, month, day, 23, 59, 59, 999));
+
+    onChange(utcDate);
   };
 
   return (
@@ -99,8 +127,8 @@ export default function GenerateQrCodesPage() {
                               !field.value && "text-muted-foreground"
                             )}
                           >
-                            {field.value ? (
-                              format(field.value, "PPP")
+                            {displayDate ? (
+                              format(displayDate, "d MMMM yyyy")
                             ) : (
                               <span>Pick a date</span>
                             )}
@@ -111,17 +139,17 @@ export default function GenerateQrCodesPage() {
                       <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
                           mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
+                          selected={displayDate}
+                          onSelect={(date) => handleDateSelect(date, field.onChange)}
                           disabled={(date) =>
-                            date < new Date()
+                            date ? isBefore(date, startOfDay(new Date())) : false
                           }
                           initialFocus
                         />
                       </PopoverContent>
                     </Popover>
                     <FormDescription>
-                      QR codes will become invalid after this date.
+                      QR codes will become invalid at the end of this day (11:59 PM).
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
