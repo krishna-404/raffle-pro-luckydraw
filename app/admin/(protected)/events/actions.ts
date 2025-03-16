@@ -63,26 +63,23 @@ export async function deleteEvent(eventId: string) {
     throw new Error(`Cannot delete event because it has ${entryCount} entries`);
   }
 
-  // Check if event has prizes
-  const { count: prizeCount } = await supabase
+  // Delete all prizes associated with the event first
+  const { error: prizeDeletionError } = await supabase
     .from('prizes')
-    .select('*', { count: 'exact', head: true })
+    .delete()
     .eq('event_id', eventId);
 
-  if (prizeCount && prizeCount > 0) {
-    throw new Error(`Please delete the ${prizeCount} prizes associated with this event first`);
+  if (prizeDeletionError) {
+    throw new Error('Failed to delete associated prizes');
   }
 
-  // If no entries and no prizes, delete the event
+  // Now delete the event
   const { error } = await supabase
     .from('events')
     .delete()
     .eq('id', eventId);
 
   if (error) {
-    if (error.code === '23503') { // Foreign key violation
-      throw new Error('Cannot delete event because it has associated records');
-    }
     throw error;
   }
 } 
