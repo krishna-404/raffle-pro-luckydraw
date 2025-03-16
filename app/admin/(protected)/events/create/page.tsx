@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format, isBefore, startOfDay } from "date-fns";
+import { isBefore, startOfDay } from "date-fns";
 import { CalendarIcon, ImageIcon, Loader2, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useFieldArray, useForm } from "react-hook-form";
@@ -34,18 +34,22 @@ const prizeSchema = z.object({
   seniority_index: z.number(),
 });
 
+// Form validation schema
 const formSchema = z.object({
   name: z.string().min(1, "Event name is required"),
   description: z.string(),
+  // Validate start date to ensure it's not in the past
   start_date: z.date({
     required_error: "Start date is required",
   }).refine(date => !isBefore(date, startOfDay(new Date())), "Start date must be today or in the future"),
+  // Validate end date to ensure it's not in the past
   end_date: z.date({
     required_error: "End date is required",
   }).refine(date => !isBefore(date, startOfDay(new Date())), "End date must be today or in the future"),
   prizes: z.array(prizeSchema)
     .min(1, "At least one prize is required")
     .max(10, "Maximum 10 prizes allowed"),
+// Ensure end date is not before start date
 }).refine(data => !isBefore(data.end_date, data.start_date), {
   message: "End date must be on or after start date",
   path: ["end_date"],
@@ -55,6 +59,7 @@ type FormData = z.infer<typeof formSchema>;
 
 export default function CreateEventPage() {
   const router = useRouter();
+  // Initialize form with react-hook-form and zod validation
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -69,19 +74,45 @@ export default function CreateEventPage() {
     control: form.control,
   });
 
+  // Handle form submission
   const onSubmit = async (data: FormData) => {
     try {
+      // At this point, dates in data are in UTC midnight
+      // They will be properly interpreted as the correct day in IST
+      // because UTC midnight (00:00) is IST 05:30 of the same day
       await createEvent(data);
       router.push('/admin/events');
       router.refresh();
     } catch (error) {
+      // Handle any errors during submission
       form.setError("root", { 
         message: error instanceof Error 
           ? error.message 
           : "Failed to create event. Please try again."
       });
+      // Keep the form values on error
       form.reset({ ...form.getValues() }, { keepValues: true });
     }
+  };
+
+  const handleDateSelect = (date: Date | undefined, onChange: (date: Date | undefined) => void) => {
+    if (!date) {
+      onChange(undefined);
+      return;
+    }
+
+    // Extract the date components from the selected date
+    // These will be in local timezone, but we only care about the date part
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const day = date.getDate();
+    
+    // Create a new date at midnight UTC using Date.UTC
+    // This ensures the date is stored consistently regardless of the user's timezone
+    // For example: March 17th 00:00 UTC will be March 17th 05:30 IST
+    const utcDate = new Date(Date.UTC(year, month, day));
+
+    onChange(utcDate);
   };
 
   return (
@@ -150,7 +181,12 @@ export default function CreateEventPage() {
                               )}
                             >
                               {field.value ? (
-                                format(field.value, "PPP")
+                                field.value.toLocaleDateString('en-IN', {
+                                  timeZone: 'Asia/Kolkata',
+                                  day: 'numeric',
+                                  month: 'long',
+                                  year: 'numeric'
+                                })
                               ) : (
                                 <span>Pick a date</span>
                               )}
@@ -162,9 +198,9 @@ export default function CreateEventPage() {
                           <Calendar
                             mode="single"
                             selected={field.value}
-                            onSelect={field.onChange}
+                            onSelect={(date) => handleDateSelect(date, field.onChange)}
                             disabled={(date) =>
-                              new Date(date).getTime() < new Date().setHours(0,0,0,0)
+                              date ? isBefore(date, startOfDay(new Date())) : false
                             }
                             initialFocus
                           />
@@ -192,7 +228,12 @@ export default function CreateEventPage() {
                               )}
                             >
                               {field.value ? (
-                                format(field.value, "PPP")
+                                field.value.toLocaleDateString('en-IN', {
+                                  timeZone: 'Asia/Kolkata',
+                                  day: 'numeric',
+                                  month: 'long',
+                                  year: 'numeric'
+                                })
                               ) : (
                                 <span>Pick a date</span>
                               )}
@@ -204,8 +245,8 @@ export default function CreateEventPage() {
                           <Calendar
                             mode="single"
                             selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date: Date | undefined) => 
+                            onSelect={(date) => handleDateSelect(date, field.onChange)}
+                            disabled={(date) =>
                               date ? isBefore(date, startOfDay(new Date())) : false
                             }
                             initialFocus
