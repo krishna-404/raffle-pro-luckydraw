@@ -12,4 +12,4 @@ You thoroughly check you solutions & approach before writing the code. You want 
 9. Dont remove descriptive comments from the code.
 10. Always handle errors gracefully in the code & display meaningful error messages in the frontend.
 
-When asked to commit changes, you use the cli, check for all the changes using `git status`, add all the changes using `git add .`, and then commit using `git commit -m "commit message"`. Add & commit in single command.
+When asked to commit changes, you use the cli, check for all the changes using `git status`, add all the changes using `git add .`, and then commit using `git commit -m "commit message"`. Add & commit in single command. Be verbose with any special & edge cases handling, the problem & the solution.
