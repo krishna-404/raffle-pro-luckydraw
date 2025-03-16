@@ -1,6 +1,6 @@
 'use client';
 
-import { Bar, BarChart, Legend, ResponsiveContainer, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 interface OverviewProps {
   data: {
@@ -15,7 +15,11 @@ interface OverviewProps {
 export function Overview({ data }: OverviewProps) {
   return (
     <ResponsiveContainer width="100%" height={350}>
-      <BarChart data={data}>
+      <BarChart 
+        data={data}
+        barGap={4}
+        barCategoryGap={16}
+      >
         <XAxis
           dataKey="month"
           stroke="#888888"
@@ -30,34 +34,31 @@ export function Overview({ data }: OverviewProps) {
           axisLine={false}
           tickFormatter={(value) => `${value}`}
         />
-        <Legend />
+        <Tooltip shared={false} />
+        <Legend wrapperStyle={{ paddingTop: 16 }} />
         <Bar
           name="QR Codes"
           dataKey="qrCodes"
-          fill="currentColor"
+          fill="#93c5fd" // blue-300 (pastel blue)
           radius={[4, 4, 0, 0]}
-          className="fill-primary"
         />
         <Bar
           name="Events"
           dataKey="events"
-          fill="currentColor"
+          fill="#c4b5fd" // violet-300 (pastel purple)
           radius={[4, 4, 0, 0]}
-          className="fill-primary/70"
         />
         <Bar
           name="Entries"
           dataKey="entries"
-          fill="currentColor"
+          fill="#fdba74" // orange-300 (pastel orange)
           radius={[4, 4, 0, 0]}
-          className="fill-primary/40"
         />
         <Bar
           name="Winners"
           dataKey="winners"
-          fill="currentColor"
+          fill="#6ee7b7" // emerald-300 (pastel green)
           radius={[4, 4, 0, 0]}
-          className="fill-green-500"
         />
       </BarChart>
     </ResponsiveContainer>
