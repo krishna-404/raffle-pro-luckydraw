@@ -13,7 +13,15 @@ function CountdownTimer({ endDate }: { endDate: string }) {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      const secondsLeft = differenceInSeconds(new Date(endDate), new Date());
+      // Create date object and adjust for timezone offset
+      const end = new Date(endDate);
+      // Set to end of the same day
+      end.setHours(23, 59, 59, 999);
+      
+      const now = new Date();
+      
+      const secondsLeft = differenceInSeconds(end, now);
+      
       if (secondsLeft <= 0) {
         setTimeLeft("Ended");
         clearInterval(timer);

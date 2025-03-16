@@ -22,6 +22,8 @@ export type ActiveEvent = {
 export async function getActiveEvent(): Promise<ActiveEvent | null> {
   const supabase = await createClient();
   
+  const now = new Date();
+  
   const { data: events, error } = await supabase
     .from('events')
     .select(`
@@ -34,13 +36,13 @@ export async function getActiveEvent(): Promise<ActiveEvent | null> {
         seniority_index
       )
     `)
-    .gte('end_date', new Date().toISOString())
-    .lte('start_date', new Date().toISOString())
+    .gte('end_date', now.toISOString().split('T')[0]) // Compare only the date part
+    .lte('start_date', now.toISOString().split('T')[0])
     .order('start_date', { ascending: false })
     .limit(1)
     .single();
 
-  if (error || !events) {
+  if (error) {
     return null;
   }
 
