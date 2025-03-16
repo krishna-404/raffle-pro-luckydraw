@@ -1,8 +1,11 @@
 'use client';
 
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarDays, QrCode, Users } from "lucide-react";
+import { format } from "date-fns";
+import { CalendarDays, ChevronRight, QrCode, Users } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getDashboardStats, type DashboardStats } from "./actions";
 import { DashboardHeader } from "./components/header";
@@ -14,6 +17,7 @@ export default function AdminPage() {
     totalQrCodes: 0,
     totalEvents: 0,
     totalEntries: 0,
+    recentEntries: [],
     monthlyStats: []
   });
 
@@ -97,11 +101,37 @@ export default function AdminPage() {
             </Card>
             <Card className="col-span-3">
               <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
+                <CardTitle>Recent Entries</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-8">
-                  {/* TODO: Add recent activity list */}
+                  {stats.recentEntries.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No recent entries found.</p>
+                  ) : (
+                    <>
+                      {stats.recentEntries.map((entry) => (
+                        <div key={entry.id} className="flex items-center">
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium leading-none">{entry.name}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {entry.event_name}
+                            </p>
+                          </div>
+                          <div className="ml-auto text-sm text-muted-foreground">
+                            {format(new Date(entry.created_at), 'PPp')}
+                          </div>
+                        </div>
+                      ))}
+                      <div className="mt-4 flex justify-end">
+                        <Button variant="outline" size="sm" asChild>
+                          <Link href="/admin/entries">
+                            View all entries
+                            <ChevronRight className="ml-1 h-4 w-4" />
+                          </Link>
+                        </Button>
+                      </div>
+                    </>
+                  )}
                 </div>
               </CardContent>
             </Card>

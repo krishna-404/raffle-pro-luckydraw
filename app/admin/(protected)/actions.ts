@@ -3,10 +3,18 @@
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 
+export type RecentEntry = {
+  id: string;
+  name: string;
+  event_name: string;
+  created_at: string;
+};
+
 export type DashboardStats = {
   totalQrCodes: number;
   totalEvents: number;
   totalEntries: number;
+  recentEntries: RecentEntry[];
   monthlyStats: {
     month: string;
     qrCodes: number;
@@ -30,6 +38,29 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     supabase.from('events').select('*', { count: 'exact', head: true }),
     supabase.from('event_entries').select('*', { count: 'exact', head: true }),
   ]);
+
+  // Get recent entries
+  const { data: recentEntriesData, error: recentEntriesError } = await supabase
+    .from('event_entries')
+    .select(`
+      id,
+      name,
+      created_at,
+      events:event_id (name)
+    `)
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  if (recentEntriesError) {
+    console.error('Error fetching recent entries:', recentEntriesError);
+  }
+
+  const recentEntries = (recentEntriesData || []).map((entry: any) => ({
+    id: entry.id,
+    name: entry.name,
+    event_name: entry.events?.name || 'Unknown Event',
+    created_at: entry.created_at,
+  }));
 
   // Get monthly stats for the last 6 months
   const now = new Date();
@@ -86,6 +117,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     totalQrCodes: qrCodesCount.count || 0,
     totalEvents: eventsCount.count || 0,
     totalEntries: entriesCount.count || 0,
+    recentEntries,
     monthlyStats: monthlyData,
   };
 } 
