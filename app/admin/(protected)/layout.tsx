@@ -1,5 +1,6 @@
 import { signOut } from "@/app/admin/(protected)/actions";
 import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/toaster";
 import { CalendarDays, Gift, Home, LogOut, QrCode, Users } from "lucide-react";
 import { Inter, Playfair_Display } from "next/font/google";
 import Link from "next/link";
@@ -74,7 +75,10 @@ export default function ProtectedLayout({
       </div>
 
       {/* Main content */}
-      <div className="flex-1">{children}</div>
+      <div className="flex-1">
+        {children}
+        <Toaster />
+      </div>
     </div>
   );
 } 
