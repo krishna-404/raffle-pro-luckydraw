@@ -75,22 +75,14 @@ async function handlePrizeImageUpload(
  *    Existing: |-------|
  *    New:      |-------|
  */
-export async function checkDateOverlap(start_date: Date, end_date: Date): Promise<boolean> {
+export async function checkDateOverlap(start_date: Date, end_date: Date): Promise<{ hasOverlap: boolean; eventName?: string }> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
     .from('events')
-    .select('id')
+    .select('name')
     .or(
-      // First condition checks scenarios 1, 2, and 3:
-      // - If existing event's start date is before/on new event's end date AND
-      // - If existing event's end date is after/on new event's start date
-      // This catches any kind of overlap where dates intersect
       `and(start_date.lte.${end_date.toISOString()},end_date.gte.${start_date.toISOString()}),` +
-      // Second condition checks scenario 4:
-      // - If existing event's start date is after/on new event's start date AND
-      // - If existing event's end date is before/on new event's end date
-      // This catches when new event completely contains an existing event
       `and(start_date.gte.${start_date.toISOString()},end_date.lte.${end_date.toISOString()})`
     );
 
@@ -98,8 +90,13 @@ export async function checkDateOverlap(start_date: Date, end_date: Date): Promis
     throw new Error(`Failed to check date overlap: ${error.message}`);
   }
 
-  // If any events match our conditions, we have an overlap
-  return data.length > 0;
+  // Check if we have any overlapping events
+  const hasOverlappingEvent = data && data.length > 0;
+  
+  return {
+    hasOverlap: hasOverlappingEvent,
+    eventName: hasOverlappingEvent ? data[0].name : undefined
+  };
 }
 
 export async function createEvent(data: CreateEventData) {
@@ -113,9 +110,9 @@ export async function createEvent(data: CreateEventData) {
     }
 
     // Check for date overlap
-    const hasOverlap = await checkDateOverlap(data.start_date, data.end_date);
+    const { hasOverlap, eventName } = await checkDateOverlap(data.start_date, data.end_date);
     if (hasOverlap) {
-      throw new Error('Event dates overlap with an existing event');
+      throw new Error(`Event dates overlap with existing event "${eventName}"`);
     }
 
     // Use the create_event_with_prizes RPC function

@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { isBefore, startOfDay } from "date-fns";
-import { CalendarIcon, ImageIcon, Loader2, Plus, Trash2 } from "lucide-react";
+import { AlertCircle, CalendarIcon, ImageIcon, Loader2, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -77,21 +77,22 @@ export default function CreateEventPage() {
   // Handle form submission
   const onSubmit = async (data: FormData) => {
     try {
-      // At this point, dates in data are in UTC midnight
-      // They will be properly interpreted as the correct day in IST
-      // because UTC midnight (00:00) is IST 05:30 of the same day
+      // At this point, dates are in UTC midnight
       await createEvent(data);
       router.push('/admin/events');
       router.refresh();
     } catch (error) {
-      // Handle any errors during submission
+      // Show error in the form
       form.setError("root", { 
+        type: "server",
         message: error instanceof Error 
           ? error.message 
           : "Failed to create event. Please try again."
       });
-      // Keep the form values on error
-      form.reset({ ...form.getValues() }, { keepValues: true });
+      
+      // Scroll to error message
+      const errorElement = document.querySelector('[role="alert"]');
+      errorElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   };
 
@@ -374,10 +375,16 @@ export default function CreateEventPage() {
               </div>
 
               {form.formState.errors.root && (
-                <div className="rounded-md bg-destructive/15 p-3">
-                  <p className="text-sm font-medium text-destructive">
-                    {form.formState.errors.root.message}
-                  </p>
+                <div 
+                  className="rounded-md bg-destructive/15 p-3"
+                  role="alert"
+                >
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-destructive" />
+                    <p className="text-sm font-medium text-destructive">
+                      {form.formState.errors.root.message}
+                    </p>
+                  </div>
                 </div>
               )}
 
