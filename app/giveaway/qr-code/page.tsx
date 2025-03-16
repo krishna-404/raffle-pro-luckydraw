@@ -95,18 +95,22 @@ export default function QrCodePage() {
     if (!qrCode || !eventId) return;
 
     try {
-      setError(null); // Clear any existing errors
+      setError(null);
+      console.log('Submitting entry with data:', { qrCode, eventId, ...data });
       const result = await submitEntry(qrCode, eventId, data);
+      console.log('Submit entry response:', result);
+      
       if (result.error) {
         setError(result.error);
-        // Scroll to top where error is displayed
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else if (result.success && result.verified) {
-        // If entry is successful and verified, redirect to success page
-        // The success page will verify the entry using the secure cookie
+        console.log('Entry successful and verified, redirecting...');
         router.push('/giveaway/success');
+      } else {
+        console.log('Entry response unclear:', result);
       }
     } catch (error) {
+      console.error('Submit entry error:', error);
       setError(error instanceof Error ? error.message : 'Failed to submit entry. Please try again.');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }

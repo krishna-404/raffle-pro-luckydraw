@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, Loader2 } from "lucide-react";
@@ -12,33 +14,57 @@ export default function SuccessPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [entryData, setEntryData] = useState<{ code: string; name: string } | null>(null);
+  const [entryData, setEntryData] = useState<{ 
+    code: string; 
+    name: string;
+    eventName: string;
+  } | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+
     const verify = async () => {
+      // Prevent multiple verifications
+      if (isVerifying) return;
+      setIsVerifying(true);
+
       try {
         const result = await verifyEntry();
-        if (result.error) {
-          setError(result.error);
-          // If verification fails, redirect back to giveaway page after 3 seconds
-          setTimeout(() => {
-            router.push('/giveaway');
-          }, 3000);
-        } else if (result.success) {
-          setEntryData({
-            code: result.entryCode,
-            name: result.name
-          });
+        console.log('Verification result:', result);
+        
+        // Only update state if component is still mounted
+        if (isMounted) {
+          if (result.error) {
+            setError(result.error);
+          } else if (result.success) {
+            setEntryData({
+              code: result.entryCode,
+              name: result.name,
+              eventName: result.eventName || 'Giveaway'
+            });
+          }
         }
       } catch (error) {
-        setError('Failed to verify entry');
+        console.error('Verification error:', error);
+        if (isMounted) {
+          setError('Failed to verify entry');
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+          setIsVerifying(false);
+        }
       }
     };
 
     verify();
-  }, [router]);
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Empty dependency array
 
   if (loading) {
     return (
@@ -59,12 +85,15 @@ export default function SuccessPage() {
         <Card className="max-w-md w-full">
           <CardHeader>
             <CardTitle className="text-red-600">Verification Failed</CardTitle>
-            <CardDescription>{error}</CardDescription>
+            <CardDescription className="whitespace-pre-wrap">{error}</CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              Redirecting you back to the giveaway page...
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Please try submitting your entry again.
             </p>
+            <Button asChild className="w-full">
+              <Link href="/giveaway">Return to Giveaway</Link>
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -79,6 +108,11 @@ export default function SuccessPage() {
             <CardTitle className="text-red-600">Error</CardTitle>
             <CardDescription>Invalid entry verification</CardDescription>
           </CardHeader>
+          <CardContent>
+            <Button asChild className="w-full">
+              <Link href="/giveaway">Return to Giveaway</Link>
+            </Button>
+          </CardContent>
         </Card>
       </div>
     );
@@ -93,14 +127,20 @@ export default function SuccessPage() {
           </div>
           <CardTitle>Entry Confirmed!</CardTitle>
           <CardDescription>
-            Thank you, {entryData.name}! Your entry has been successfully recorded
+            Thank you, {entryData?.name}!
+          </CardDescription>
+          <CardDescription>
+            Your entry has been successfully recorded for{' '}
+            <span className="font-semibold text-primary">
+              {entryData?.eventName}
+            </span>
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="text-center">
             <p className="text-sm text-muted-foreground mb-2">Your Entry Code</p>
             <div className="font-mono text-2xl font-bold tracking-wider">
-              {entryData.code}
+              {entryData?.code}
             </div>
           </div>
 

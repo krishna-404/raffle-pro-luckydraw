@@ -1,5 +1,6 @@
 'use server';
 
+import { Database } from "@/types/supabase";
 import { createClient } from "@/utils/supabase/server";
 import { cookies, headers } from "next/headers";
 import { type EntryFormData } from "./types";
@@ -230,26 +231,13 @@ export async function submitEntry(
   const supabase = await createClient();
   const headersList = await headers();
   const cookieStore = await cookies();
+  console.log('Starting entry submission for:', { qrCode, eventId });
 
   try {
     // Get IP and user agent for tracking
     const forwardedFor = headersList.get('x-forwarded-for') || 'unknown';
     const ip = forwardedFor.split(',')[0];
     const userAgent = headersList.get('user-agent') || 'unknown';
-
-    // Check for existing entries from this IP in the last hour
-    const oneHourAgo = new Date(Date.now() - 3600 * 1000);
-    const { data: recentEntry } = await supabase
-      .from('event_entries')
-      .select('id')
-      .eq('request_ip_address', ip)
-      .gte('created_at', oneHourAgo.toISOString())
-      .single();
-
-    if (recentEntry) {
-      await logAttempt(ip, userAgent, 'entry_submission', qrCode, false, 'Recent entry exists');
-      return { error: 'Please wait before submitting another entry' };
-    }
 
     // Generate and verify unique entry code
     let entryCode = generateEntryCode();
@@ -273,9 +261,12 @@ export async function submitEntry(
     }
 
     if (!isUnique) {
+      console.error('Failed to generate unique entry code after', maxAttempts, 'attempts');
       await logAttempt(ip, userAgent, 'entry_submission', qrCode, false, 'Failed to generate unique code');
       throw new Error('Failed to generate unique entry code');
     }
+
+    console.log('Generated unique entry code:', entryCode);
 
     // Insert entry
     const { error: insertError } = await supabase
@@ -295,17 +286,23 @@ export async function submitEntry(
       });
 
     if (insertError) {
-      await logAttempt(ip, userAgent, 'entry_submission', qrCode, false, insertError.message);
       console.error('Entry insertion error:', insertError);
+      await logAttempt(ip, userAgent, 'entry_submission', qrCode, false, insertError.message);
       return { error: insertError.message || 'Failed to submit entry' };
     }
 
+    console.log('Entry inserted successfully, setting verification cookie');
+
     // Store entry verification in secure, HTTP-only cookie
-    cookieStore.set('entry_verification', JSON.stringify({
+    const verificationData = {
       code: entryCode,
       eventId,
       timestamp: Date.now()
-    }), {
+    };
+    
+    console.log('Setting verification cookie with data:', verificationData);
+    
+    cookieStore.set('entry_verification', JSON.stringify(verificationData), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
@@ -313,6 +310,8 @@ export async function submitEntry(
     });
 
     await logAttempt(ip, userAgent, 'entry_submission', qrCode, true);
+    console.log('Entry submission completed successfully');
+    
     return { 
       success: true,
       verified: true
@@ -326,6 +325,10 @@ export async function submitEntry(
   }
 }
 
+type EntryWithEvent = Database['public']['Tables']['event_entries']['Row'] & {
+  events: Pick<Database['public']['Tables']['events']['Row'], 'name'>;
+};
+
 /**
  * Verifies an entry using secure session data
  * Used by success page to prevent unauthorized access
@@ -338,14 +341,21 @@ export async function verifyEntry() {
   try {
     // Get verification data from cookie
     const verificationCookie = cookieStore.get('entry_verification');
+    console.log('Verification cookie found:', verificationCookie?.value ? 'yes' : 'no');
+    
     if (!verificationCookie?.value) {
       return { error: 'No entry found' };
     }
 
     const verification = JSON.parse(verificationCookie.value);
+    console.log('Parsed verification data:', verification);
     
     // Check if verification has expired (5 minutes)
-    if (Date.now() - verification.timestamp > 300000) {
+    const timeSinceVerification = Date.now() - verification.timestamp;
+    console.log('Time since verification (ms):', timeSinceVerification);
+    
+    if (timeSinceVerification > 300000) {
+      console.log('Verification expired');
       cookieStore.delete('entry_verification');
       return { error: 'Entry verification expired' };
     }
@@ -353,22 +363,33 @@ export async function verifyEntry() {
     // Verify entry exists in database
     const { data: entry, error: entryError } = await supabase
       .from('event_entries')
-      .select('id, name, event_id')
+      .select(`
+        id, 
+        name, 
+        event_id,
+        events!inner (
+          name
+        )
+      `)
       .eq('id', verification.code)
       .eq('event_id', verification.eventId)
-      .single();
+      .single() as { data: EntryWithEvent | null; error: any };
 
+    if (entryError) {
+      console.error('Database verification error:', entryError);
+    }
+    
     if (entryError || !entry) {
       return { error: 'Invalid entry' };
     }
 
-    // Clear verification cookie after successful verification
-    cookieStore.delete('entry_verification');
+    console.log('Entry verified in database:', entry);
 
     return {
       success: true,
       entryCode: entry.id,
-      name: entry.name
+      name: entry.name,
+      eventName: entry.events.name
     };
   } catch (error) {
     console.error('Entry verification error:', error);
