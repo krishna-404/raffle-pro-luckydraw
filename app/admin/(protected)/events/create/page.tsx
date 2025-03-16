@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
+import { format, isBefore, startOfDay } from "date-fns";
 import { CalendarIcon, ImageIcon, Loader2, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useFieldArray, useForm } from "react-hook-form";
@@ -39,16 +39,15 @@ const formSchema = z.object({
   description: z.string(),
   start_date: z.date({
     required_error: "Start date is required",
-  }),
+  }).refine(date => !isBefore(date, startOfDay(new Date())), "Start date must be today or in the future"),
   end_date: z.date({
     required_error: "End date is required",
-  })
-    .refine(date => date > new Date(), "End date must be in the future"),
+  }).refine(date => !isBefore(date, startOfDay(new Date())), "End date must be today or in the future"),
   prizes: z.array(prizeSchema)
     .min(1, "At least one prize is required")
     .max(10, "Maximum 10 prizes allowed"),
-}).refine(data => data.end_date > data.start_date, {
-  message: "End date must be after start date",
+}).refine(data => !isBefore(data.end_date, data.start_date), {
+  message: "End date must be on or after start date",
   path: ["end_date"],
 });
 
@@ -59,6 +58,7 @@ export default function CreateEventPage() {
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      name: "",
       description: "",
       prizes: [{ name: "", description: "", image: null, seniority_index: 0 }],
     },
@@ -162,7 +162,7 @@ export default function CreateEventPage() {
                             selected={field.value}
                             onSelect={field.onChange}
                             disabled={(date) =>
-                              date < new Date()
+                              new Date(date).getTime() < new Date().setHours(0,0,0,0)
                             }
                             initialFocus
                           />
@@ -203,8 +203,8 @@ export default function CreateEventPage() {
                             mode="single"
                             selected={field.value}
                             onSelect={field.onChange}
-                            disabled={(date) =>
-                              date < new Date()
+                            disabled={(date: Date | undefined) => 
+                              date ? isBefore(date, startOfDay(new Date())) : false
                             }
                             initialFocus
                           />

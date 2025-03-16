@@ -8,8 +8,8 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS admin_users (
   email VARCHAR PRIMARY KEY,
   password VARCHAR NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+  created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
 
 -- Create events table
@@ -20,10 +20,8 @@ CREATE TABLE IF NOT EXISTS events (
   description TEXT,
   start_date DATE NOT NULL,
   end_date DATE NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-  CONSTRAINT unique_start_date UNIQUE(start_date),
-  CONSTRAINT unique_end_date UNIQUE(end_date),
+  created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
   CONSTRAINT valid_dates CHECK (end_date >= start_date)
 );
 
@@ -35,17 +33,17 @@ CREATE TABLE IF NOT EXISTS prizes (
   name VARCHAR NOT NULL,
   description TEXT,
   image_url TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+  created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
 
 -- Create QR codes table
 CREATE TABLE IF NOT EXISTS qr_codes (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_by_admin VARCHAR REFERENCES admin_users(email),
-  expires_at TIMESTAMP WITH TIME ZONE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+  expires_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
 
 -- Create event entries table
@@ -56,25 +54,27 @@ CREATE TABLE IF NOT EXISTS event_entries (
   prize_id UUID REFERENCES prizes(id) ON DELETE SET NULL,
   name VARCHAR NOT NULL,
   email VARCHAR,
-  whatsapp_number BIGINT NOT NULL,
+  whatsapp_number VARCHAR(15) NOT NULL,
   address TEXT NOT NULL,
   city VARCHAR NOT NULL,
-  pincode INTEGER NOT NULL,
+  pincode VARCHAR(6) NOT NULL,
   request_ip_address VARCHAR NOT NULL,
   request_user_agent TEXT NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-  CONSTRAINT valid_pincode CHECK (pincode >= 100000 AND pincode <= 999999)
+  created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+  CONSTRAINT valid_pincode CHECK (pincode ~ '^[1-9][0-9]{5}$'),
+  CONSTRAINT valid_whatsapp CHECK (whatsapp_number ~ '^[6-9][0-9]{9}$')
 );
 
--- Create registration_attempts table
-CREATE TABLE registration_attempts (
+-- Create auth_attempts table for tracking login and registration attempts
+CREATE TABLE auth_attempts (
   id BIGSERIAL PRIMARY KEY,
   ip_address TEXT NOT NULL,
-  success BOOLEAN NOT NULL DEFAULT false,
   user_agent TEXT,
+  action_type VARCHAR NOT NULL CHECK (action_type IN ('login', 'registration')),
+  success BOOLEAN NOT NULL DEFAULT false,
   failure_reason TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 -- Create entry_attempts table for tracking QR code and entry submission attempts
@@ -86,19 +86,22 @@ CREATE TABLE entry_attempts (
   qr_code_id UUID REFERENCES qr_codes(id),
   success BOOLEAN NOT NULL DEFAULT false,
   failure_reason TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 -- Add indexes for efficient querying
-CREATE INDEX registration_attempts_ip_created_at_idx ON registration_attempts(ip_address, created_at);
+CREATE INDEX events_dates_idx ON events(start_date, end_date);
+CREATE INDEX prizes_event_seniority_idx ON prizes(event_id, seniority_index);
 CREATE INDEX entry_attempts_ip_created_at_idx ON entry_attempts(ip_address, created_at);
 CREATE INDEX entry_attempts_qr_code_idx ON entry_attempts(qr_code_id);
+CREATE INDEX auth_attempts_ip_created_at_idx ON auth_attempts(ip_address, created_at);
+CREATE INDEX auth_attempts_action_type_idx ON auth_attempts(action_type);
 
 -- Create trigger function for updating updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.updated_at = timezone('utc'::text, now());
+    NEW.updated_at = now();
     RETURN NEW;
 END;
 $$ language 'plpgsql';
@@ -152,8 +155,8 @@ ALTER TABLE events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE prizes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE qr_codes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE event_entries ENABLE ROW LEVEL SECURITY;
-ALTER TABLE registration_attempts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE entry_attempts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE auth_attempts ENABLE ROW LEVEL SECURITY;
 
 -- Admin users policies
 CREATE POLICY "Anyone can view admin data"
@@ -167,7 +170,9 @@ CREATE POLICY "Admin users can manage all events"
 
 CREATE POLICY "Public can view active events"
   ON events FOR SELECT
-  USING (current_date BETWEEN start_date AND end_date);
+  USING (
+    current_date BETWEEN start_date AND end_date
+  );
 
 -- Prizes policies
 CREATE POLICY "Admin users can manage all prizes"
@@ -188,8 +193,8 @@ CREATE POLICY "Admin users can manage all QR codes"
   USING (auth.uid() IS NOT NULL);
 
 -- Event entries policies
-CREATE POLICY "Admin users can view all entries"
-  ON event_entries FOR SELECT
+CREATE POLICY "Admin users can manage all entries"
+  ON event_entries FOR ALL
   USING (auth.uid() IS NOT NULL);
 
 CREATE POLICY "Public can create entries for active events"
@@ -200,14 +205,14 @@ CREATE POLICY "Public can create entries for active events"
     AND current_date BETWEEN events.start_date AND events.end_date
   ));
 
--- Registration attempts policies
-CREATE POLICY "Enable insert for registration attempts"
-  ON registration_attempts FOR INSERT
+-- Auth attempts policies
+CREATE POLICY "Enable insert for auth attempts"
+  ON auth_attempts FOR INSERT
   WITH CHECK (true);
 
-CREATE POLICY "Enable select for registration attempts"
-  ON registration_attempts FOR SELECT
-  USING (true);
+CREATE POLICY "Enable select for auth attempts"
+  ON auth_attempts FOR SELECT
+  USING (auth.uid() IS NOT NULL);
 
 -- Entry attempts policies
 CREATE POLICY "Enable insert for all"
@@ -218,16 +223,16 @@ CREATE POLICY "Enable select for authenticated users"
   ON entry_attempts FOR SELECT
   TO authenticated USING (true);
 
--- Create a type for event input
+-- Create event input type
 CREATE TYPE public.event_input AS (
   name VARCHAR,
   description TEXT,
-  start_date TIMESTAMPTZ,
-  end_date TIMESTAMPTZ,
+  start_date DATE,
+  end_date DATE,
   created_by_admin VARCHAR
 );
 
--- Create a type for prize input
+-- Create prize input type
 CREATE TYPE public.prize_input AS (
   name VARCHAR,
   description TEXT,
@@ -336,6 +341,28 @@ AS $$
   FROM grouped_qr
   ORDER BY created_at DESC;
 $$;
+
+-- Create storage bucket for prize images
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('prize-images', 'prize-images', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Storage policies for prize-images bucket
+CREATE POLICY "Allow authenticated users to upload files"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (
+  bucket_id = 'prize-images' AND
+  auth.role() = 'authenticated' AND
+  (storage.foldername(name))[1] = auth.uid()::text AND
+  octet_length(content) < 5242880 AND -- 5MB max file size
+  mime_type IN ('image/jpeg', 'image/png', 'image/webp') -- Allowed file types
+);
+
+CREATE POLICY "Allow public to view files"
+ON storage.objects FOR SELECT
+TO public
+USING (bucket_id = 'prize-images');
 
 -- Grant execute permissions to authenticated users
 GRANT EXECUTE ON FUNCTION create_event_with_prizes TO authenticated;

@@ -1,97 +1,75 @@
 'use server';
 
+import { checkRateLimit, logAttempt } from '@/utils/auth-attempts';
 import { createClient } from '@/utils/supabase/server';
-import { headers } from 'next/headers';
 import { type RegisterFormData } from './types';
 
-const MAX_FAILED_ATTEMPTS = 5;
-
 export async function registerAction(data: RegisterFormData): Promise<{ error: string | null; success?: boolean }> {
-  const headersList = await headers();
   const supabase = await createClient();
 
   try {
-    // Get IP address and user agent
-    const forwardedFor = headersList.get('x-forwarded-for');
-    const ip = forwardedFor ? forwardedFor.split(',')[0] : 'unknown';
-    const userAgent = headersList.get('user-agent') || 'unknown';
-
-    // Get recent failed attempts using database time
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-    
-    const { data: recentAttempts, error: attemptsError } = await supabase
-      .from('registration_attempts')
-      .select('*')
-      .eq('ip_address', ip)
-      .eq('success', false)
-      .gte('created_at', oneHourAgo.toISOString())
-      .limit(MAX_FAILED_ATTEMPTS);
-
-    console.log({attemptsError});
-    if (attemptsError) {
-      console.error('Error checking registration attempts:', attemptsError);
-      return { error: 'Unable to process registration' };
-    }
-
-    // Check if too many failed attempts
-    if (recentAttempts && recentAttempts.length >= MAX_FAILED_ATTEMPTS) {
-      await supabase
-        .from('registration_attempts')
-        .insert({ 
-          ip_address: ip, 
-          user_agent: userAgent, 
-          success: false,
-          failure_reason: 'Too many failed attempts'
-        });
-      return { error: 'Too many failed attempts. Please try again later.' };
-    }
+    // Check rate limit and get request info
+    const { ip, userAgent } = await checkRateLimit('registration');
 
     // Validate registration token
     if (data.token !== process.env.ADMIN_REGISTRATION_TOKEN) {
-      await supabase
-        .from('registration_attempts')
-        .insert({ 
-          ip_address: ip, 
-          user_agent: userAgent, 
-          success: false,
-          failure_reason: 'Invalid registration token'
-        });
+      await logAttempt({
+        actionType: 'registration',
+        ip,
+        userAgent,
+        success: false,
+        failureReason: 'Invalid registration token'
+      });
       return { error: 'Invalid registration token' };
     }
 
-    console.log({data});
     // Attempt to sign up
-    const { data: authData, error: signUpError } = await supabase.auth.signUp({
+    const { error: signUpError } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
     });
 
-    console.log('signUpError', signUpError);
     if (signUpError) {
-      await supabase
-        .from('registration_attempts')
-        .insert({ 
-          ip_address: ip, 
-          user_agent: userAgent, 
-          success: false,
-          failure_reason: signUpError.message
-        });
+      await logAttempt({
+        actionType: 'registration',
+        ip,
+        userAgent,
+        success: false,
+        failureReason: signUpError.message
+      });
       return { error: signUpError.message };
     }
 
-    // Log the successful attempt
-    await supabase
-      .from('registration_attempts')
-      .insert({ 
-        ip_address: ip, 
-        user_agent: userAgent, 
-        success: true,
-        failure_reason: null
-      });
+    // Log successful attempt
+    await logAttempt({
+      actionType: 'registration',
+      ip,
+      userAgent,
+      success: true
+    });
 
     return { error: null, success: true };
   } catch (error) {
     if (error instanceof Error) {
+      // If it's a rate limit error, return it directly
+      if (error.message.includes('Too many failed attempts')) {
+        return { error: error.message };
+      }
+
+      // For other errors, log the attempt
+      try {
+        const { ip, userAgent } = await checkRateLimit('registration');
+        await logAttempt({
+          actionType: 'registration',
+          ip,
+          userAgent,
+          success: false,
+          failureReason: error.message
+        });
+      } catch (logError) {
+        console.error('Failed to log error:', logError);
+      }
+
       return { error: error.message };
     }
     return { error: 'An unexpected error occurred' };
