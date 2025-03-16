@@ -4,11 +4,54 @@ export const dynamic = 'force-dynamic';
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { differenceInSeconds } from "date-fns";
 import { Check, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { verifyEntry } from "../qr-code/actions";
+
+// Countdown timer component for events
+function CountdownTimer({ endDate }: { endDate: string }) {
+  const [timeLeft, setTimeLeft] = useState("");
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      // Create date object for end date
+      const end = new Date(endDate);
+      // Set to end of the same day
+      end.setHours(23, 59, 59, 999);
+      
+      const now = new Date();
+      
+      const secondsLeft = differenceInSeconds(end, now);
+      
+      if (secondsLeft <= 0) {
+        setTimeLeft("Event has ended");
+        clearInterval(timer);
+        return;
+      }
+
+      const days = Math.floor(secondsLeft / (24 * 60 * 60));
+      const hours = Math.floor((secondsLeft % (24 * 60 * 60)) / (60 * 60));
+      const minutes = Math.floor((secondsLeft % (60 * 60)) / 60);
+      const seconds = Math.floor(secondsLeft % 60);
+
+      setTimeLeft(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [endDate]);
+
+  return (
+    <div className="text-center mt-4">
+      <p className="text-sm text-muted-foreground mb-1">Event ends in</p>
+      <div className="font-mono text-lg font-semibold text-primary">
+        {timeLeft}
+      </div>
+    </div>
+  );
+}
 
 export default function SuccessPage() {
   const router = useRouter();
@@ -18,6 +61,7 @@ export default function SuccessPage() {
     code: string; 
     name: string;
     eventName: string;
+    eventEndDate?: string;
   } | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
 
@@ -40,7 +84,8 @@ export default function SuccessPage() {
             setEntryData({
               code: result.entryCode,
               name: result.name,
-              eventName: result.eventName || 'Giveaway'
+              eventName: result.eventName || 'Giveaway',
+              eventEndDate: result.eventEndDate
             });
           }
         }
@@ -142,6 +187,10 @@ export default function SuccessPage() {
               {entryData?.code}
             </div>
           </div>
+
+          {entryData.eventEndDate && (
+            <CountdownTimer endDate={entryData.eventEndDate} />
+          )}
 
           <div className="text-sm text-muted-foreground text-center space-y-2">
             <p>

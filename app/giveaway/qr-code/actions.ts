@@ -398,7 +398,8 @@ export async function verifyEntry() {
       success: true,
       entryCode: entry.id,
       name: entry.name,
-      eventName: entry.events.name
+      eventName: entry.events.name,
+      eventEndDate: entry.events.end_date
     };
   } catch (error) {
     console.error('Entry verification error:', error);
