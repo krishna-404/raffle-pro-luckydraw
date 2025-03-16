@@ -31,7 +31,6 @@ export default function SuccessPage() {
 
       try {
         const result = await verifyEntry();
-        console.log('Verification result:', result);
         
         // Only update state if component is still mounted
         if (isMounted) {

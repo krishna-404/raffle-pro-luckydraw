@@ -136,8 +136,6 @@ export async function createEvent(data: CreateEventData) {
       throw new Error(`Failed to create event: ${createError.message}`);
     }
 
-    console.log('RPC Result:', result); // Debug log
-
     if (!result || !result.event_id || !result.prize_ids) {
       throw new Error('Invalid response from create_event_with_prizes');
     }

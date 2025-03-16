@@ -231,13 +231,23 @@ export async function submitEntry(
   const supabase = await createClient();
   const headersList = await headers();
   const cookieStore = await cookies();
-  console.log('Starting entry submission for:', { qrCode, eventId });
 
   try {
     // Get IP and user agent for tracking
     const forwardedFor = headersList.get('x-forwarded-for') || 'unknown';
     const ip = forwardedFor.split(',')[0];
     const userAgent = headersList.get('user-agent') || 'unknown';
+
+    // Get event end date
+    const { data: event } = await supabase
+      .from('events')
+      .select('end_date')
+      .eq('id', eventId)
+      .single();
+
+    if (!event) {
+      throw new Error('Event not found');
+    }
 
     // Generate and verify unique entry code
     let entryCode = generateEntryCode();
@@ -266,8 +276,6 @@ export async function submitEntry(
       throw new Error('Failed to generate unique entry code');
     }
 
-    console.log('Generated unique entry code:', entryCode);
-
     // Insert entry
     const { error: insertError } = await supabase
       .from('event_entries')
@@ -291,8 +299,6 @@ export async function submitEntry(
       return { error: insertError.message || 'Failed to submit entry' };
     }
 
-    console.log('Entry inserted successfully, setting verification cookie');
-
     // Store entry verification in secure, HTTP-only cookie
     const verificationData = {
       code: entryCode,
@@ -300,17 +306,22 @@ export async function submitEntry(
       timestamp: Date.now()
     };
     
-    console.log('Setting verification cookie with data:', verificationData);
+    // Calculate cookie expiry: 1 day after event end date
+    const eventEndDate = new Date(event.end_date);
+    eventEndDate.setHours(23, 59, 59, 999); // Set to end of day
+    const cookieExpiry = new Date(eventEndDate);
+    cookieExpiry.setDate(cookieExpiry.getDate() + 1); // Add one day
+    
+    const maxAge = Math.floor((cookieExpiry.getTime() - Date.now()) / 1000); // Convert to seconds
     
     cookieStore.set('entry_verification', JSON.stringify(verificationData), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 300 // 5 minutes
+      maxAge: maxAge > 0 ? maxAge : 300 // Use 5 minutes as fallback if event has ended
     });
 
     await logAttempt(ip, userAgent, 'entry_submission', qrCode, true);
-    console.log('Entry submission completed successfully');
     
     return { 
       success: true,
@@ -326,7 +337,7 @@ export async function submitEntry(
 }
 
 type EntryWithEvent = Database['public']['Tables']['event_entries']['Row'] & {
-  events: Pick<Database['public']['Tables']['events']['Row'], 'name'>;
+  events: Pick<Database['public']['Tables']['events']['Row'], 'name' | 'end_date'>;
 };
 
 /**
@@ -341,25 +352,13 @@ export async function verifyEntry() {
   try {
     // Get verification data from cookie
     const verificationCookie = cookieStore.get('entry_verification');
-    console.log('Verification cookie found:', verificationCookie?.value ? 'yes' : 'no');
     
     if (!verificationCookie?.value) {
       return { error: 'No entry found' };
     }
 
     const verification = JSON.parse(verificationCookie.value);
-    console.log('Parsed verification data:', verification);
     
-    // Check if verification has expired (5 minutes)
-    const timeSinceVerification = Date.now() - verification.timestamp;
-    console.log('Time since verification (ms):', timeSinceVerification);
-    
-    if (timeSinceVerification > 300000) {
-      console.log('Verification expired');
-      cookieStore.delete('entry_verification');
-      return { error: 'Entry verification expired' };
-    }
-
     // Verify entry exists in database
     const { data: entry, error: entryError } = await supabase
       .from('event_entries')
@@ -368,7 +367,8 @@ export async function verifyEntry() {
         name, 
         event_id,
         events!inner (
-          name
+          name,
+          end_date
         )
       `)
       .eq('id', verification.code)
@@ -383,7 +383,16 @@ export async function verifyEntry() {
       return { error: 'Invalid entry' };
     }
 
-    console.log('Entry verified in database:', entry);
+    // Check if we're past the cookie expiry (1 day after event end)
+    const eventEndDate = new Date(entry.events.end_date);
+    eventEndDate.setHours(23, 59, 59, 999); // Set to end of day
+    const cookieExpiry = new Date(eventEndDate);
+    cookieExpiry.setDate(cookieExpiry.getDate() + 1); // Add one day
+
+    if (new Date() > cookieExpiry) {
+      cookieStore.delete('entry_verification');
+      return { error: 'Entry verification expired' };
+    }
 
     return {
       success: true,

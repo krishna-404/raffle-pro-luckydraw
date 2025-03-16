@@ -96,18 +96,14 @@ export default function QrCodePage() {
 
     try {
       setError(null);
-      console.log('Submitting entry with data:', { qrCode, eventId, ...data });
       const result = await submitEntry(qrCode, eventId, data);
-      console.log('Submit entry response:', result);
       
       if (result.error) {
         setError(result.error);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else if (result.success && result.verified) {
-        console.log('Entry successful and verified, redirecting...');
         router.push('/giveaway/success');
       } else {
-        console.log('Entry response unclear:', result);
       }
     } catch (error) {
       console.error('Submit entry error:', error);
