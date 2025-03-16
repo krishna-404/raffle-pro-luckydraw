@@ -75,10 +75,12 @@ export default function CreateEventPage() {
       router.push('/admin/events');
       router.refresh();
     } catch (error) {
-      if (error instanceof Error) {
-        form.setError("root", { message: error.message });
-      }
-      console.error('Failed to create event:', error);
+      form.setError("root", { 
+        message: error instanceof Error 
+          ? error.message 
+          : "Failed to create event. Please try again."
+      });
+      form.reset({ ...form.getValues() }, { keepValues: true });
     }
   };
 
@@ -331,9 +333,11 @@ export default function CreateEventPage() {
               </div>
 
               {form.formState.errors.root && (
-                <p className="text-sm font-medium text-destructive">
-                  {form.formState.errors.root.message}
-                </p>
+                <div className="rounded-md bg-destructive/15 p-3">
+                  <p className="text-sm font-medium text-destructive">
+                    {form.formState.errors.root.message}
+                  </p>
+                </div>
               )}
 
               <div className="flex gap-4">

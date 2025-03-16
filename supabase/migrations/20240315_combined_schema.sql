@@ -347,22 +347,46 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('prize-images', 'prize-images', true)
 ON CONFLICT (id) DO NOTHING;
 
--- Storage policies for prize-images bucket
+-- Update storage policies for prize-images bucket
+DROP POLICY IF EXISTS "Allow authenticated users to upload files" ON storage.objects;
+DROP POLICY IF EXISTS "Allow public to view files" ON storage.objects;
+DROP POLICY IF EXISTS "Allow authenticated users to manage files" ON storage.objects;
+
+-- Policy for uploading files
 CREATE POLICY "Allow authenticated users to upload files"
 ON storage.objects FOR INSERT
 TO authenticated
 WITH CHECK (
   bucket_id = 'prize-images' AND
-  auth.role() = 'authenticated' AND
-  (storage.foldername(name))[1] = auth.uid()::text AND
-  octet_length(content) < 5242880 AND -- 5MB max file size
-  mime_type IN ('image/jpeg', 'image/png', 'image/webp') -- Allowed file types
+  auth.role() = 'authenticated'
 );
 
+-- Policy for updating files
+CREATE POLICY "Allow authenticated users to update files"
+ON storage.objects FOR UPDATE
+TO authenticated
+USING (
+  bucket_id = 'prize-images' AND
+  auth.role() = 'authenticated'
+);
+
+-- Policy for deleting files
+CREATE POLICY "Allow authenticated users to delete files"
+ON storage.objects FOR DELETE
+TO authenticated
+USING (
+  bucket_id = 'prize-images' AND
+  auth.role() = 'authenticated'
+);
+
+-- Policy for viewing files
 CREATE POLICY "Allow public to view files"
 ON storage.objects FOR SELECT
 TO public
 USING (bucket_id = 'prize-images');
+
+-- Enable RLS on storage.objects
+ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
 
 -- Grant execute permissions to authenticated users
 GRANT EXECUTE ON FUNCTION create_event_with_prizes TO authenticated;
