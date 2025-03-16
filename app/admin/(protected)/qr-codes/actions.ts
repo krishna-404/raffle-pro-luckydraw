@@ -13,9 +13,7 @@ export type QrCodeGroup = {
 
 export async function getQrCodeGroups(): Promise<{ data: QrCodeGroup[]; total: number }> {
   const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .rpc('get_qr_code_stats');
+  const { data, error } = await supabase.rpc('get_qr_code_stats');
 
   if (error) {
     throw new Error(error.message);
@@ -41,65 +39,71 @@ export async function getQrCodesByGroup(
   createdByAdmin: string,
   expiresAt: string | null
 ): Promise<QrCode[]> {
-  console.log('=== GET QR CODES BY GROUP START ===');
-  console.log('Parameters:', { createdAt, createdByAdmin, expiresAt });
+  console.log('DEBUG - QR Codes Batch Issue:');
+  console.log('Input parameters:', { createdAt, createdByAdmin, expiresAt });
   
   const supabase = await createClient();
-  console.log('Supabase client created');
 
-  // Convert the date strings to ISO format for comparison
-  const createdAtDate = new Date(createdAt);
-  const startOfDay = new Date(createdAtDate);
-  startOfDay.setHours(0, 0, 0, 0);
-  
-  const endOfDay = new Date(createdAtDate);
-  endOfDay.setHours(23, 59, 59, 999);
-  
-  console.log('Date range:', {
-    startOfDay: startOfDay.toISOString(),
-    endOfDay: endOfDay.toISOString()
-  });
-
-  // Build the query
-  console.log('Building database query...');
+  // CRITICAL: Use the exact timestamp from the database for matching
+  // We're using the exact createdAt value without any modification
   let query = supabase
     .from('qr_codes')
     .select('id, created_at, created_by_admin, expires_at')
     .eq('created_by_admin', createdByAdmin)
-    .gte('created_at', startOfDay.toISOString())
-    .lte('created_at', endOfDay.toISOString());
+    .eq('created_at', createdAt); // Use exact timestamp matching
   
   // Only add the expires_at filter if it's not null
   if (expiresAt !== null) {
-    console.log(`Adding expires_at filter with value: ${expiresAt}`);
     query = query.eq('expires_at', expiresAt);
   } else {
-    console.log('Adding expires_at IS NULL filter');
     query = query.is('expires_at', null);
   }
 
-  console.log('Executing database query...');
   const { data, error } = await query;
 
   if (error) {
     console.error('Error fetching QR codes:', error);
-    console.error('Error details:', JSON.stringify(error, null, 2));
-    console.log('=== GET QR CODES BY GROUP END (WITH ERROR) ===');
     throw new Error(`Failed to fetch QR codes: ${error.message}`);
   }
 
-  console.log(`Query successful, received ${data?.length || 0} QR codes`);
+  console.log(`Retrieved ${data?.length || 0} QR codes with exact timestamp match`);
   
-  // Log a sample of the results
-  if (data && data.length > 0) {
-    console.log('Sample of first 2 QR codes:');
-    data.slice(0, 2).forEach((qr, i) => {
-      console.log(`QR #${i}: id=${qr.id?.substring(0, 8)}...`);
-    });
-  } else {
-    console.log('No QR codes found matching the criteria');
+  // If no exact matches, log this information
+  if (!data || data.length === 0) {
+    console.log('WARNING: No QR codes found with exact timestamp match');
+    console.log('Attempting to fetch all QR codes for this admin to debug');
+    
+    // Get all QR codes for this admin to debug
+    const { data: allData, error: allError } = await supabase
+      .from('qr_codes')
+      .select('id, created_at, created_by_admin, expires_at')
+      .eq('created_by_admin', createdByAdmin);
+      
+    if (allError) {
+      console.error('Error fetching all QR codes:', allError);
+    } else {
+      console.log(`Found ${allData?.length || 0} total QR codes for this admin`);
+      
+      if (allData && allData.length > 0) {
+        // Log a sample of timestamps to help debug
+        console.log('Sample QR code timestamps:');
+        allData.slice(0, 5).forEach((qr, i) => {
+          console.log(`QR #${i}: ${qr.created_at}`);
+        });
+        
+        // Log the timestamp we're trying to match (without any modification)
+        console.log('Exact timestamp to match:', createdAt);
+      }
+    }
+    
+    return [];
   }
   
-  console.log('=== GET QR CODES BY GROUP END ===');
-  return data as QrCode[];
+  // Log the successful matches
+  console.log('Successfully matched QR codes:');
+  data.slice(0, 3).forEach((qr, i) => {
+    console.log(`Match #${i}: ${qr.created_at}`);
+  });
+  
+  return data;
 } 

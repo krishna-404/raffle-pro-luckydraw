@@ -324,7 +324,7 @@ STABLE
 AS $$
   WITH grouped_qr AS (
     SELECT 
-      date_trunc('second', qr.created_at) as created_at,
+      qr.created_at,
       qr.created_by_admin,
       qr.expires_at,
       COUNT(*) as total,
@@ -333,7 +333,7 @@ AS $$
     FROM qr_codes qr
     LEFT JOIN event_entries e ON e.qr_code_id = qr.id
     GROUP BY 
-      date_trunc('second', qr.created_at),
+      qr.created_at,
       qr.created_by_admin,
       qr.expires_at
   )

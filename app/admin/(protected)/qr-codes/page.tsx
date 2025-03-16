@@ -67,30 +67,24 @@ export default function QrCodesPage() {
   };
 
   const handleGeneratePdf = async (group: QrCodeGroup) => {
-    console.log('=== PDF GENERATION PROCESS START ===');
-    console.log('Group details:', JSON.stringify(group, null, 2));
-    
     try {
       // Create a unique ID for this group
       const groupId = `${group.created_at}-${group.created_by_admin}-${group.expires_at}`;
-      console.log(`Generated group ID: ${groupId}`);
       
       // Set loading state
       setGeneratingPdf(groupId);
-      console.log('Set loading state');
       
       // Show initial toast for starting the process
       toast({
         title: "Generating PDF",
-        description: `Fetching QR codes for ${format(new Date(group.created_at), 'PPP')}...`,
+        description: `Fetching QR codes for ${format(new Date(group.created_at), 'PPP p')}...`,
       });
-      console.log('Displayed initial toast');
       
-      console.log('Fetching QR codes from server...');
-      console.log('Parameters:', {
+      console.log('Starting PDF generation for group:', {
         createdAt: group.created_at,
-        createdByAdmin: group.created_by_admin,
-        expiresAt: group.expires_at
+        admin: group.created_by_admin,
+        expiresAt: group.expires_at,
+        expectedTotal: group.total
       });
       
       // Fetch QR codes for this group
@@ -100,51 +94,51 @@ export default function QrCodesPage() {
         group.expires_at
       );
       
-      console.log(`Received ${qrCodes.length} QR codes from server`);
-      
       if (qrCodes.length === 0) {
-        console.error('No QR codes found for this group');
+        console.error('No QR codes found for batch with exact timestamp match:', {
+          exactCreatedAt: group.created_at,
+          admin: group.created_by_admin,
+          expectedTotal: group.total
+        });
+        
         toast({
           title: "No QR codes found",
-          description: "There are no QR codes available for this group.",
+          description: "There are no QR codes available for this exact timestamp. This may be due to timestamp precision differences in the database.",
           variant: "destructive"
         });
         return;
       }
       
-      // Log a sample of the QR codes
-      console.log('Sample of first 2 QR codes:');
-      qrCodes.slice(0, 2).forEach((qr, i) => {
-        console.log(`QR #${i}: id=${qr.id?.substring(0, 8) || 'MISSING'}...`);
-      });
+      if (qrCodes.length !== group.total) {
+        console.warn(`Found ${qrCodes.length} QR codes, but expected ${group.total}`);
+        
+        toast({
+          title: "Warning",
+          description: `Found ${qrCodes.length} QR codes, but expected ${group.total}. Proceeding with available QR codes.`,
+          variant: "default"
+        });
+      } else {
+        console.log(`Found all ${qrCodes.length} QR codes for PDF generation`);
+      }
       
       // Update toast to show progress
       toast({
         title: "Generating PDF",
         description: `Creating PDF with ${qrCodes.length} QR codes...`,
       });
-      console.log('Updated toast with QR code count');
       
       // Generate PDF
-      console.log('Starting PDF generation...');
       const baseUrl = window.location.origin;
-      console.log(`Using base URL: ${baseUrl}`);
-      
       const blob = await generateQrCodePdf(qrCodes, baseUrl);
-      console.log(`PDF blob received, size: ${blob.size} bytes`);
       
       // Store the blob with its ID
       setPdfBlob({ id: groupId, blob });
-      console.log('Stored PDF blob in state');
       
       toast({
         title: "Success",
         description: `PDF with ${qrCodes.length} QR codes generated successfully. Click "Download PDF" to save.`,
       });
-      console.log('Displayed success toast');
-      console.log('=== PDF GENERATION PROCESS COMPLETE ===');
     } catch (error) {
-      console.error('=== PDF GENERATION PROCESS FAILED ===');
       console.error('Failed to generate PDF:', error);
       
       // Extract error message
@@ -152,18 +146,14 @@ export default function QrCodesPage() {
         ? error.message 
         : 'An unknown error occurred';
       
-      console.error('Error message:', errorMessage);
-      
       // Display more specific error message
       toast({
         title: "Error generating PDF",
         description: errorMessage,
         variant: "destructive"
       });
-      console.log('Displayed error toast');
     } finally {
       setGeneratingPdf(null);
-      console.log('Reset loading state');
     }
   };
 
