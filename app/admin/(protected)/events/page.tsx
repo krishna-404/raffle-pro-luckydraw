@@ -2,7 +2,18 @@
 
 import { DashboardHeader } from "@/app/admin/(protected)/components/header";
 import { DashboardShell } from "@/app/admin/(protected)/components/shell";
-import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  Button,
+  useToast,
+} from "@/components/ui";
 import {
   Table,
   TableBody,
@@ -12,15 +23,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { format } from "date-fns";
-import { CalendarPlus } from "lucide-react";
+import { CalendarPlus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getEvents, type Event } from "./actions";
+import { deleteEvent, getEvents, type Event } from "./actions";
 
 export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [eventToDelete, setEventToDelete] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchEvents();
@@ -47,6 +61,21 @@ export default function EventsPage() {
         return 'bg-blue-100 text-blue-800';
       case 'ended':
         return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const handleDelete = async (eventId: string) => {
+    try {
+      await deleteEvent(eventId);
+      toast({
+        title: "Event deleted successfully",
+        variant: "default",
+      });
+      fetchEvents();
+    } catch (error) {
+      setDeleteError(error instanceof Error ? error.message : 'Failed to delete event');
+    } finally {
+      setEventToDelete(null);
     }
   };
 
@@ -78,6 +107,7 @@ export default function EventsPage() {
                 <TableHead>Prizes</TableHead>
                 <TableHead>Created By</TableHead>
                 <TableHead>Created At</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -114,6 +144,15 @@ export default function EventsPage() {
                     <TableCell>{event.prize_count}</TableCell>
                     <TableCell>{event.created_by_admin}</TableCell>
                     <TableCell>{format(new Date(event.created_at), 'PPp')}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setEventToDelete(event.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))
               )}
@@ -124,6 +163,44 @@ export default function EventsPage() {
         <div className="text-sm text-muted-foreground">
           Total Events: {total}
         </div>
+
+        {/* Confirmation Dialog */}
+        <AlertDialog open={!!eventToDelete} onOpenChange={() => setEventToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the event.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setEventToDelete(null)}>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={() => eventToDelete && handleDelete(eventToDelete)}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Error Dialog */}
+        {deleteError && (
+          <AlertDialog open={!!deleteError} onOpenChange={() => setDeleteError(null)}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Cannot Delete Event</AlertDialogTitle>
+                <AlertDialogDescription>{deleteError}</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogAction onClick={() => setDeleteError(null)}>
+                  OK
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </div>
     </DashboardShell>
   );
