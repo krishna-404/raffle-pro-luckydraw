@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
-import { CalendarDays, ChevronRight, QrCode, Users } from "lucide-react";
+import { CalendarDays, ChevronRight, Gift, QrCode, Users } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getDashboardStats, type DashboardStats } from "./actions";
@@ -17,6 +17,7 @@ export default function AdminPage() {
     totalQrCodes: 0,
     totalEvents: 0,
     totalEntries: 0,
+    totalWinners: 0,
     recentEntries: [],
     monthlyStats: []
   });
@@ -46,7 +47,7 @@ export default function AdminPage() {
           <TabsTrigger value="reports">Reports</TabsTrigger>
         </TabsList>
         <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
@@ -89,6 +90,20 @@ export default function AdminPage() {
                 </p>
               </CardContent>
             </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Total Winners
+                </CardTitle>
+                <Gift className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalWinners}</div>
+                <p className="text-xs text-muted-foreground">
+                  Winners across all events
+                </p>
+              </CardContent>
+            </Card>
           </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
             <Card className="col-span-4">
@@ -105,37 +120,82 @@ export default function AdminPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-8">
-                  {stats.recentEntries.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No recent entries found.</p>
-                  ) : (
-                    <>
-                      {stats.recentEntries.map((entry) => (
-                        <div key={entry.id} className="flex items-center">
-                          <div className="space-y-1">
-                            <p className="text-sm font-medium leading-none">{entry.name}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {entry.event_name}
-                            </p>
-                          </div>
-                          <div className="ml-auto text-sm text-muted-foreground">
-                            {format(new Date(entry.created_at), 'PPp')}
-                          </div>
-                        </div>
-                      ))}
-                      <div className="mt-4 flex justify-end">
-                        <Button variant="outline" size="sm" asChild>
-                          <Link href="/admin/entries">
-                            View all entries
-                            <ChevronRight className="ml-1 h-4 w-4" />
-                          </Link>
-                        </Button>
+                  {stats.recentEntries.map((entry) => (
+                    <div className="flex items-center" key={entry.id}>
+                      <div className="ml-4 space-y-1">
+                        <p className="text-sm font-medium leading-none">
+                          {entry.name}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {entry.event_name}
+                        </p>
                       </div>
-                    </>
-                  )}
+                      <div className="ml-auto text-sm text-muted-foreground">
+                        {format(new Date(entry.created_at), 'PP')}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
           </div>
+          <div className="grid gap-4 grid-cols-1">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Quick Links</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-2 md:grid-cols-2 lg:grid-cols-4">
+                <Button variant="outline" asChild className="justify-between">
+                  <Link href="/admin/qr-codes/generate">
+                    Generate QR Codes
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button variant="outline" asChild className="justify-between">
+                  <Link href="/admin/events/new">
+                    Create New Event
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button variant="outline" asChild className="justify-between">
+                  <Link href="/admin/entries">
+                    View All Entries
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button variant="outline" asChild className="justify-between">
+                  <Link href="/admin/winners">
+                    View All Winners
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        <TabsContent value="analytics">
+          <Card>
+            <CardHeader>
+              <CardTitle>Analytics</CardTitle>
+            </CardHeader>
+            <CardContent className="h-[400px]">
+              <p className="text-muted-foreground">
+                Analytics dashboard coming soon...
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="reports">
+          <Card>
+            <CardHeader>
+              <CardTitle>Reports</CardTitle>
+            </CardHeader>
+            <CardContent className="h-[400px]">
+              <p className="text-muted-foreground">
+                Reports dashboard coming soon...
+              </p>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </DashboardShell>

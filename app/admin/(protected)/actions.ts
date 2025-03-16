@@ -14,12 +14,14 @@ export type DashboardStats = {
   totalQrCodes: number;
   totalEvents: number;
   totalEntries: number;
+  totalWinners: number;
   recentEntries: RecentEntry[];
   monthlyStats: {
     month: string;
     qrCodes: number;
     events: number;
     entries: number;
+    winners: number;
   }[];
 };
 
@@ -33,10 +35,11 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   const supabase = await createClient();
 
   // Get total counts
-  const [qrCodesCount, eventsCount, entriesCount] = await Promise.all([
+  const [qrCodesCount, eventsCount, entriesCount, winnersCount] = await Promise.all([
     supabase.from('qr_codes').select('*', { count: 'exact', head: true }),
     supabase.from('events').select('*', { count: 'exact', head: true }),
     supabase.from('event_entries').select('*', { count: 'exact', head: true }),
+    supabase.from('event_entries').select('*', { count: 'exact', head: true }).not('prize_id', 'is', null),
   ]);
 
   // Get recent entries
@@ -66,7 +69,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   const now = new Date();
   const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
 
-  const [qrCodesData, eventsData, entriesData] = await Promise.all([
+  const [qrCodesData, eventsData, entriesData, winnersData] = await Promise.all([
     supabase
       .from('qr_codes')
       .select('created_at')
@@ -82,6 +85,12 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       .select('created_at')
       .gte('created_at', sixMonthsAgo.toISOString())
       .order('created_at'),
+    supabase
+      .from('event_entries')
+      .select('created_at')
+      .not('prize_id', 'is', null)
+      .gte('created_at', sixMonthsAgo.toISOString())
+      .order('created_at'),
   ]);
 
   // Process monthly stats
@@ -95,6 +104,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     qrCodes: 0,
     events: 0,
     entries: 0,
+    winners: 0,
   }));
 
   // Helper function to count items per month
@@ -111,12 +121,14 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     item.qrCodes = countByMonth(qrCodesData.data, index);
     item.events = countByMonth(eventsData.data, index);
     item.entries = countByMonth(entriesData.data, index);
+    item.winners = countByMonth(winnersData.data, index);
   });
 
   return {
     totalQrCodes: qrCodesCount.count || 0,
     totalEvents: eventsCount.count || 0,
     totalEntries: entriesCount.count || 0,
+    totalWinners: winnersCount.count || 0,
     recentEntries,
     monthlyStats: monthlyData,
   };
