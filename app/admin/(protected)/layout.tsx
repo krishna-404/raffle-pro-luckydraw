@@ -11,6 +11,7 @@ import {
 	Users,
 } from "lucide-react";
 import { Inter, Playfair_Display } from "next/font/google";
+import Image from "next/image";
 import Link from "next/link";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -64,7 +65,13 @@ export default function ProtectedLayout({
 				<div className="flex h-full flex-col">
 					<div className="flex h-14 items-center border-b px-4">
 						<Link href="/" className="flex items-center space-x-2">
-							<span className="font-serif text-xl font-bold">ELEGANCE</span>
+							<Image
+								src="/kayaan-logo.jpeg"
+								alt="Kayaan Logo"
+								width={140}
+								height={170}
+								className="rounded-sm"
+							/>
 						</Link>
 					</div>
 					<nav className="flex-1 space-y-1 p-2">
