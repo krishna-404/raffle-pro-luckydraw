@@ -1,4 +1,4 @@
-import { createClient as createServerClient } from "@/utils/supabase/server";
+import { createServiceRoleClient } from "@/utils/supabase/server";
 
 // Define types for the message service
 export type MessageRecipient = {
@@ -168,7 +168,8 @@ export class MessageService {
 	 */
 	private async logMessage(logEntry: MessageLogEntry): Promise<void> {
 		try {
-			const supabase = await createServerClient();
+			// Use service role client to bypass RLS policies
+			const supabase = await createServiceRoleClient();
 
 			const { error } = await supabase.from("message_logs").insert({
 				template_id: logEntry.templateId,

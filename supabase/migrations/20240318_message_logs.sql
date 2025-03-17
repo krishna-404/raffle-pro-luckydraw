@@ -29,7 +29,16 @@ CREATE TRIGGER update_message_logs_updated_at
 -- Enable RLS
 ALTER TABLE message_logs ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policy if it exists
+DROP POLICY IF EXISTS "Admin users can manage all message logs" ON message_logs;
+
 -- Create RLS policies
+-- Allow authenticated users to manage all message logs
 CREATE POLICY "Admin users can manage all message logs"
   ON message_logs FOR ALL
-  USING (auth.uid() IS NOT NULL); 
+  USING (auth.uid() IS NOT NULL);
+
+-- Allow inserts from server-side functions
+CREATE POLICY "Allow inserts from server-side functions"
+  ON message_logs FOR INSERT
+  WITH CHECK (true); 

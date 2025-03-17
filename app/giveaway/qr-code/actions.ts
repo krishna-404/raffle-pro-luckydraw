@@ -143,6 +143,7 @@ function sendEntryNotification(
 	participantMobile: string,
 	eventName: string,
 	entryId: string,
+	eventId: string,
 ) {
 	// Don't await this promise to keep it non-blocking
 	messageService
@@ -152,6 +153,7 @@ function sendEntryNotification(
 				part_name: participantName,
 				event_name: eventName,
 				part_id: entryId,
+				event_id: eventId,
 			},
 			process.env.MSG91_ENTRY_TEMPLATE_ID,
 		)
@@ -472,6 +474,7 @@ export async function submitEntry(
 			data.whatsappNumber,
 			event.name,
 			entryCode,
+			eventId,
 		);
 
 		return {
