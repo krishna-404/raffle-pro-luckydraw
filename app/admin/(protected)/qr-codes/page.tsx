@@ -86,13 +86,6 @@ export default function QrCodesPage() {
 				description: `Fetching QR codes for ${format(new Date(group.created_at), "PPP p")}...`,
 			});
 
-			console.log("Starting PDF generation for group:", {
-				createdAt: group.created_at,
-				admin: group.created_by_admin,
-				expiresAt: group.expires_at,
-				expectedTotal: group.total,
-			});
-
 			// Fetch QR codes for this group
 			const qrCodes = await getQrCodesByGroup(
 				group.created_at,
@@ -129,8 +122,6 @@ export default function QrCodesPage() {
 					description: `Found ${qrCodes.length} QR codes, but expected ${group.total}. Proceeding with available QR codes.`,
 					variant: "default",
 				});
-			} else {
-				console.log(`Found all ${qrCodes.length} QR codes for PDF generation`);
 			}
 
 			// Update toast to show progress

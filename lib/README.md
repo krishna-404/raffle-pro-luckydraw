@@ -42,9 +42,7 @@ const result = await messageService.sendMessage({
 });
 
 // Check the result
-if (result.success) {
-  console.log('Message sent successfully!');
-} else {
+if (!result.success) {
   console.error('Failed to send message:', result.error);
 }
 ```

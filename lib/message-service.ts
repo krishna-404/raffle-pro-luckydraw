@@ -73,9 +73,6 @@ export class MessageService {
 
 		// Skip actual message sending in non-production environments
 		if (process.env.NODE_ENV !== "production") {
-			console.log("Skipping message sending in non-production environment");
-			console.log("Would have sent:", JSON.stringify(requestBody, null, 2));
-
 			// Still log the message to database for tracking
 			await this.logMessage({
 				templateId: template,
