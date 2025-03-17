@@ -13,12 +13,6 @@ export function generateMetadata(): Metadata {
 	const baseUrl =
 		process.env.NEXT_PUBLIC_SITE_URL || "https://raffle-luckydraw.vercel.app";
 
-	// Dynamic OG image URL
-	const ogImageUrl = new URL("/api/og", baseUrl);
-	ogImageUrl.searchParams.set("title", title);
-	ogImageUrl.searchParams.set("description", description);
-	ogImageUrl.searchParams.set("route", "/");
-
 	return baseGenerateMetadata({
 		title: "Home",
 		description,
@@ -28,13 +22,6 @@ export function generateMetadata(): Metadata {
 			description,
 			url: baseUrl,
 			images: [
-				{
-					url: ogImageUrl.toString(),
-					width: 1200,
-					height: 630,
-					alt: title,
-				},
-				// Fallback static image
 				{
 					url: "/opengraph-image.png",
 					width: 1200,
@@ -47,7 +34,7 @@ export function generateMetadata(): Metadata {
 			card: "summary_large_image",
 			title,
 			description,
-			images: [ogImageUrl.toString(), "/twitter-image.png"],
+			images: ["/twitter-image.png"],
 		},
 		keywords: [
 			"elegant sarees",

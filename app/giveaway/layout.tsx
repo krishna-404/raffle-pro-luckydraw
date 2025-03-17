@@ -11,12 +11,6 @@ export function generateMetadata(): Metadata {
 		process.env.NEXT_PUBLIC_SITE_URL || "https://raffle-luckydraw.vercel.app";
 	const pageUrl = `${baseUrl}/giveaway`;
 
-	// Dynamic OG image URL
-	const ogImageUrl = new URL("/api/og", baseUrl);
-	ogImageUrl.searchParams.set("title", "Win Elegant Designer Sarees!");
-	ogImageUrl.searchParams.set("description", description);
-	ogImageUrl.searchParams.set("route", "/giveaway");
-
 	return baseGenerateMetadata({
 		title: "Saree Giveaway",
 		description,
@@ -39,13 +33,6 @@ export function generateMetadata(): Metadata {
 			type: "website",
 			images: [
 				{
-					url: ogImageUrl.toString(),
-					width: 1200,
-					height: 630,
-					alt: "Kayaan Prints Saree Giveaway",
-				},
-				// Fallback images
-				{
 					url: "/giveaway-og-image.png",
 					width: 1200,
 					height: 630,
@@ -63,7 +50,7 @@ export function generateMetadata(): Metadata {
 			card: "summary_large_image",
 			title,
 			description,
-			images: [ogImageUrl.toString(), "/giveaway-og-image.png"],
+			images: ["/giveaway-twitter-image.png"],
 		},
 		alternates: {
 			canonical: pageUrl,

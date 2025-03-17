@@ -23,8 +23,6 @@ export async function GET(req: NextRequest) {
 			searchParams.get("description") ||
 			"Discover our exquisite collection of handcrafted sarees, where tradition meets contemporary design.";
 		const route = searchParams.get("route") || "/";
-		const bgColor = searchParams.get("bgColor") || "#111827";
-		const textColor = searchParams.get("textColor") || "#ffffff";
 
 		// Load the Inter font
 		const interRegular = await fetch(
@@ -35,6 +33,7 @@ export async function GET(req: NextRequest) {
 			"https://fonts.googleapis.com/css2?family=Inter:wght@700&display=swap",
 		).then((res) => res.arrayBuffer());
 
+		// Create a simple OG image with just text
 		return new ImageResponse(
 			<div
 				style={{
@@ -44,14 +43,10 @@ export async function GET(req: NextRequest) {
 					flexDirection: "column",
 					alignItems: "center",
 					justifyContent: "center",
-					backgroundColor: bgColor,
-					color: textColor,
+					backgroundColor: "#111827",
+					color: "white",
 					padding: "40px 60px",
 					fontFamily: "Inter",
-					backgroundImage:
-						"linear-gradient(to bottom, rgba(17, 24, 39, 0.8), rgba(17, 24, 39, 1)), url(https://raffle-luckydraw.vercel.app/hero-saree.jpg)",
-					backgroundSize: "cover",
-					backgroundPosition: "center",
 				}}
 			>
 				<div
@@ -68,20 +63,15 @@ export async function GET(req: NextRequest) {
 					<div
 						style={{
 							marginBottom: "30px",
-							display: "flex",
-							alignItems: "center",
-							justifyContent: "center",
+							padding: "15px 30px",
+							backgroundColor: "white",
+							color: "#111827",
+							borderRadius: "8px",
+							fontWeight: "bold",
+							fontSize: "32px",
 						}}
 					>
-						<img
-							src="https://raffle-luckydraw.vercel.app/kayaan-logo.jpeg"
-							alt="Kayaan Prints Logo"
-							width={180}
-							height={90}
-							style={{
-								borderRadius: "8px",
-							}}
-						/>
+						Kayaan Prints
 					</div>
 					<h1
 						style={{
