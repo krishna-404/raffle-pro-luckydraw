@@ -76,6 +76,31 @@ export class MessageService {
 			recipients: [{ ...recipient, mobiles: mobile }],
 		};
 
+		// Skip actual message sending in non-production environments
+		if (process.env.NODE_ENV !== "production") {
+			console.log("Skipping message sending in non-production environment");
+			console.log("Would have sent:", JSON.stringify(requestBody, null, 2));
+
+			// Still log the message to database for tracking
+			await this.logMessage({
+				templateId: template,
+				recipientMobile: mobile,
+				eventId: recipient.event_id as string,
+				eventEntryId: recipient.part_id as string,
+				messageVariables: { ...recipient },
+				status: "skipped",
+				responseData: { skipped: true, environment: process.env.NODE_ENV },
+				errorMessage: "Skipped in non-production environment",
+			});
+
+			return {
+				success: true,
+				status: "skipped",
+				messageId: `dev-${Date.now()}`,
+				responseData: { skipped: true, environment: process.env.NODE_ENV },
+			};
+		}
+
 		try {
 			// Send the message
 			const response = await fetch(
