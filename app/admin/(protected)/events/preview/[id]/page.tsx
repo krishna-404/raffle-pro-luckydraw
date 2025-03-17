@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils";
 import { differenceInSeconds } from "date-fns";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { use, useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { getEventForPreview } from "../../actions";
 
 // Define types for the event and prizes
@@ -28,19 +28,14 @@ interface EventPreview {
 	prizes: Prize[];
 }
 
-// CountdownTimer component from the giveaway page
 function CountdownTimer({ endDate }: { endDate: string }) {
 	const [timeLeft, setTimeLeft] = useState("");
 
 	useEffect(() => {
 		const timer = setInterval(() => {
-			// Create date object and adjust for timezone offset
 			const end = new Date(endDate);
-			// Set to end of the same day
 			end.setHours(23, 59, 59, 999);
-
 			const now = new Date();
-
 			const secondsLeft = differenceInSeconds(end, now);
 
 			if (secondsLeft <= 0) {
@@ -67,26 +62,18 @@ function CountdownTimer({ endDate }: { endDate: string }) {
 	);
 }
 
-// Event preview page
-export default function EventPreviewPage({
-	params,
-}: {
-	params: { id: string } | Promise<{ id: string }>;
-}) {
+export default function EventPreviewPage() {
+	const { id } = useParams(); // access route params in client component
 	const router = useRouter();
 	const [event, setEvent] = useState<EventPreview | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
-	// Unwrap params if it's a Promise
-	const unwrappedParams = params instanceof Promise ? use(params) : params;
-	const eventId = unwrappedParams.id;
-
 	useEffect(() => {
 		const fetchEvent = async () => {
 			try {
 				setLoading(true);
-				const data = await getEventForPreview(eventId);
+				const data = await getEventForPreview(id as string);
 				setEvent(data as EventPreview);
 			} catch (error) {
 				console.error("Failed to fetch event:", error);
@@ -97,8 +84,8 @@ export default function EventPreviewPage({
 				setLoading(false);
 			}
 		};
-		fetchEvent();
-	}, [eventId]);
+		if (id) fetchEvent();
+	}, [id]);
 
 	if (loading) {
 		return (
@@ -128,7 +115,6 @@ export default function EventPreviewPage({
 
 	return (
 		<div className="relative">
-			{/* Back button - positioned to avoid overlap with banner */}
 			<div className="absolute top-4 left-4 z-10">
 				<Button
 					variant="outline"
@@ -143,14 +129,12 @@ export default function EventPreviewPage({
 
 			<main className="min-h-screen pt-12 px-4">
 				<div className="container mx-auto max-w-6xl">
-					{/* Preview notice - part of the main content with inline-block */}
 					<div className="text-center mb-8">
 						<span className="inline-block bg-yellow-500 text-yellow-950 py-1 px-8 text-sm font-medium rounded-md">
 							Preview Mode - This is how the event appears to users
 						</span>
 					</div>
 
-					{/* Hero Section */}
 					<div className="text-center space-y-6 mb-16">
 						<div className="flex justify-center mb-6">
 							<img
@@ -178,14 +162,13 @@ export default function EventPreviewPage({
 						</Button>
 					</div>
 
-					{/* Prizes Section */}
 					<div className="space-y-8">
 						<h2 className="text-3xl font-serif text-center">Prizes</h2>
 						<div
 							className={cn(
 								"grid gap-6 mx-auto",
 								"grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
-								"max-w-[400px] md:max-w-none", // Constrain single column width
+								"max-w-[400px] md:max-w-none",
 								{
 									"md:grid-cols-1 lg:grid-cols-1 md:max-w-[400px]":
 										event.prizes.length === 1,
