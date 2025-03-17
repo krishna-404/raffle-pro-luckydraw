@@ -281,7 +281,7 @@ export default function Home() {
 								</div>
 							</div>
 							<iframe
-								src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3719.4069390311166!2d72.83661807607848!3d21.20750998127878!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04e59411d1563%3A0xc9bd0d885d7c94be!2sRaghukul%20Textile%20Market!5e0!3m2!1sen!2sin!4v1716661234567!5m2!1sen!2sin"
+								src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3720.160026578704!2d72.84230707526099!3d21.185800980503124!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04e423042389f%3A0x498edd421d93beb5!2sKayaan%20Prints%20Pvt.%20Ltd.!5e0!3m2!1sen!2sin!4v1742214074276!5m2!1sen!2sin"
 								width="100%"
 								height="100%"
 								style={{ border: 0, position: "relative", zIndex: 10 }}

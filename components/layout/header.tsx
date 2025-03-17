@@ -42,13 +42,12 @@ export function Header() {
 						className="font-serif text-2xl font-bold flex items-center gap-2"
 					>
 						<Image
-							src="/kayaan-logo-small.jpeg"
+							src="/kayaan-logo.jpeg"
 							alt="Kayaan Logo"
-							width={40}
-							height={40}
+							width={140}
+							height={70}
 							className="rounded-sm"
 						/>
-						<span className="text-primary">KAYAAN</span>
 					</Link>
 
 					<div className="hidden md:block flex-1" />
