@@ -112,7 +112,14 @@ export default function SuccessPage() {
 
 	if (loading) {
 		return (
-			<div className="min-h-screen flex items-center justify-center p-4">
+			<div className="min-h-screen flex flex-col items-center justify-center p-4">
+				<div className="mb-6">
+					<img
+						src="/kayaan-logo.jpeg"
+						alt="Kayaan Logo"
+						className="h-24 object-contain"
+					/>
+				</div>
 				<Card className="max-w-md w-full">
 					<CardContent className="pt-6 text-center">
 						<Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
@@ -125,7 +132,14 @@ export default function SuccessPage() {
 
 	if (error) {
 		return (
-			<div className="min-h-screen flex items-center justify-center p-4">
+			<div className="min-h-screen flex flex-col items-center justify-center p-4">
+				<div className="mb-6">
+					<img
+						src="/kayaan-logo.jpeg"
+						alt="Kayaan Logo"
+						className="h-24 object-contain"
+					/>
+				</div>
 				<Card className="max-w-md w-full">
 					<CardHeader>
 						<CardTitle className="text-red-600">Verification Failed</CardTitle>
@@ -148,7 +162,14 @@ export default function SuccessPage() {
 
 	if (!entryData) {
 		return (
-			<div className="min-h-screen flex items-center justify-center p-4">
+			<div className="min-h-screen flex flex-col items-center justify-center p-4">
+				<div className="mb-6">
+					<img
+						src="/kayaan-logo.jpeg"
+						alt="Kayaan Logo"
+						className="h-24 object-contain"
+					/>
+				</div>
 				<Card className="max-w-md w-full">
 					<CardHeader>
 						<CardTitle className="text-red-600">Error</CardTitle>
@@ -165,7 +186,14 @@ export default function SuccessPage() {
 	}
 
 	return (
-		<main className="min-h-screen flex items-center justify-center p-4">
+		<main className="min-h-screen flex flex-col items-center justify-center p-4">
+			<div className="mb-6">
+				<img
+					src="/kayaan-logo.jpeg"
+					alt="Kayaan Logo"
+					className="h-24 object-contain"
+				/>
+			</div>
 			<Card className="max-w-md w-full">
 				<CardHeader className="text-center">
 					<div className="mx-auto w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
