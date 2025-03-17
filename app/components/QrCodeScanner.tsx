@@ -97,9 +97,11 @@ export function QrCodeScanner({ isOpen, onClose }: QrCodeScannerProps) {
 			try {
 				// Validate URL format
 				const url = new URL(decodedText);
+				const currentDomain = window.location.hostname;
 
-				// Check if URL matches our pattern
+				// Check if URL matches our pattern AND has the same domain as the current site
 				if (
+					url.hostname === currentDomain &&
 					url.pathname.startsWith("/giveaway/qr-code") &&
 					url.searchParams.has("code") &&
 					/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
@@ -109,6 +111,11 @@ export function QrCodeScanner({ isOpen, onClose }: QrCodeScannerProps) {
 					// Valid QR code URL
 					setValidUrl(decodedText);
 					setError(null);
+				} else if (url.hostname !== currentDomain) {
+					// Invalid domain
+					setError(
+						`Invalid QR code domain. Expected ${currentDomain} but got ${url.hostname}.`,
+					);
 				} else {
 					// Invalid QR code format
 					setError(
@@ -157,8 +164,17 @@ export function QrCodeScanner({ isOpen, onClose }: QrCodeScannerProps) {
 
 	const handleNavigate = () => {
 		if (validUrl) {
-			router.push(validUrl);
-			handleClose();
+			// Extract just the path and query parameters to use with Next.js router
+			// This ensures we stay on the same domain
+			try {
+				const urlObj = new URL(validUrl);
+				const pathWithQuery = urlObj.pathname + urlObj.search;
+				router.push(pathWithQuery);
+				handleClose();
+			} catch (err) {
+				console.error("Error parsing URL for navigation:", err);
+				setError("Error navigating to the scanned URL. Please try again.");
+			}
 		}
 	};
 
@@ -201,9 +217,11 @@ export function QrCodeScanner({ isOpen, onClose }: QrCodeScannerProps) {
 							try {
 								// Validate URL format
 								const url = new URL(decodedText);
+								const currentDomain = window.location.hostname;
 
-								// Check if URL matches pattern
+								// Check if URL matches pattern AND has the same domain as the current site
 								if (
+									url.hostname === currentDomain &&
 									url.pathname.startsWith("/giveaway/qr-code") &&
 									url.searchParams.has("code") &&
 									/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
@@ -212,7 +230,13 @@ export function QrCodeScanner({ isOpen, onClose }: QrCodeScannerProps) {
 								) {
 									setValidUrl(decodedText);
 									setError(null);
+								} else if (url.hostname !== currentDomain) {
+									// Invalid domain
+									setError(
+										`Invalid QR code domain. Expected ${currentDomain} but got ${url.hostname}.`,
+									);
 								} else {
+									// Invalid QR code format
 									setError(
 										"Invalid QR code format. Please scan a valid giveaway QR code.",
 									);
