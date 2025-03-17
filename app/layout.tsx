@@ -1,6 +1,12 @@
 import { RootLayoutWrapper } from "@/components/layout/root-layout";
 import { Inter, Playfair_Display } from "next/font/google";
+import { JsonLd } from "./components/json-ld";
 import "./globals.css";
+import {
+	defaultMetadata,
+	generateOrganizationJsonLd,
+	generateWebsiteJsonLd,
+} from "./lib/metadata";
 
 const inter = Inter({ subsets: ["latin"] });
 const playfair = Playfair_Display({
@@ -8,11 +14,7 @@ const playfair = Playfair_Display({
 	variable: "--font-serif",
 });
 
-export const metadata = {
-	title: "Kayaan - Premium Saree Collection",
-	description:
-		"Discover our exquisite collection of handcrafted sarees, where tradition meets contemporary design.",
-};
+export const metadata = defaultMetadata;
 
 export default function RootLayout({
 	children,
@@ -21,6 +23,10 @@ export default function RootLayout({
 }) {
 	return (
 		<html lang="en" className={`${inter.className} ${playfair.variable}`}>
+			<head>
+				<JsonLd data={generateWebsiteJsonLd()} />
+				<JsonLd data={generateOrganizationJsonLd()} />
+			</head>
 			<body className="min-h-screen flex flex-col">
 				<RootLayoutWrapper>{children}</RootLayoutWrapper>
 			</body>

@@ -1,6 +1,31 @@
+import { generateMetadata as baseGenerateMetadata } from "@/app/lib/metadata";
 import { Button } from "@/components/ui/button";
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+
+export function generateMetadata(): Metadata {
+	return baseGenerateMetadata({
+		title: "Home",
+		description:
+			"Create and manage raffles and lucky draws for your events and giveaways.",
+		useTitleTemplate: false,
+		openGraph: {
+			title: "Raffle & Lucky Draw",
+			description:
+				"Create and manage raffles and lucky draws for your events and giveaways.",
+			url: "https://raffle-luckydraw.vercel.app",
+			images: [
+				{
+					url: "/opengraph-image.png",
+					width: 1200,
+					height: 630,
+					alt: "Raffle & Lucky Draw",
+				},
+			],
+		},
+	});
+}
 
 export default function Home() {
 	return (
