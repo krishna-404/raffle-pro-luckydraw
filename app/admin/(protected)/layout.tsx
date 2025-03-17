@@ -59,17 +59,17 @@ export default function ProtectedLayout({
 	children: React.ReactNode;
 }) {
 	return (
-		<div className="flex min-h-screen">
+		<div className="flex min-h-screen bg-background">
 			{/* Sidebar */}
-			<div className="hidden border-r bg-gray-100/40 lg:block lg:w-64">
+			<div className="hidden border-r border-border bg-muted/40 lg:block lg:w-64">
 				<div className="flex h-full flex-col">
-					<div className="flex h-14 items-center border-b px-4">
+					<div className="flex h-14 items-center border-b border-border px-4">
 						<Link href="/" className="flex items-center space-x-2">
 							<Image
 								src="/kayaan-logo.jpeg"
 								alt="Kayaan Logo"
 								width={140}
-								height={170}
+								height={70}
 								className="rounded-sm"
 							/>
 						</Link>
@@ -79,18 +79,18 @@ export default function ProtectedLayout({
 							<Link
 								key={item.href}
 								href={item.href}
-								className="flex items-center space-x-2 rounded-lg px-3 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+								className="flex items-center space-x-2 rounded-lg px-3 py-2 text-muted-foreground hover:bg-muted hover:text-primary"
 							>
 								<item.icon className="h-5 w-5" />
 								<span>{item.title}</span>
 							</Link>
 						))}
 					</nav>
-					<div className="border-t p-4">
+					<div className="border-t border-border p-4">
 						<form action={signOut}>
 							<Button
 								variant="ghost"
-								className="w-full justify-start space-x-2"
+								className="w-full justify-start space-x-2 text-muted-foreground hover:text-primary"
 							>
 								<LogOut className="h-5 w-5" />
 								<span>Log out</span>

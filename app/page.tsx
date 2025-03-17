@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export default function Home() {
 	return (
-		<main className="min-h-screen">
+		<main className="min-h-screen bg-background">
 			{/* Hero Section */}
 			<section className="relative h-[90vh] flex items-center">
 				<div className="absolute inset-0 z-0">
@@ -35,7 +35,10 @@ export default function Home() {
 							tradition meets contemporary design.
 						</p>
 						<div className="space-x-4">
-							<Button size="lg" className="bg-primary hover:bg-primary/90">
+							<Button
+								size="lg"
+								className="bg-primary hover:bg-primary/90 text-primary-foreground"
+							>
 								Explore Collection
 							</Button>
 							<Link href="/giveaway">
@@ -53,9 +56,9 @@ export default function Home() {
 			</section>
 
 			{/* Featured Collection */}
-			<section className="py-20 bg-white">
+			<section className="py-20 bg-background">
 				<div className="container mx-auto px-4">
-					<h2 className="text-3xl font-serif text-center mb-12">
+					<h2 className="text-3xl font-serif text-center mb-12 text-primary">
 						Featured Collection
 					</h2>
 					<div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -85,24 +88,26 @@ export default function Home() {
 			</section>
 
 			{/* About Section */}
-			<section className="py-20 bg-neutral-50">
+			<section className="py-20 bg-muted">
 				<div className="container mx-auto px-4">
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
 						<div>
-							<h2 className="text-3xl font-serif mb-6">Our Heritage</h2>
-							<p className="text-neutral-600 mb-4">
+							<h2 className="text-3xl font-serif mb-6 text-primary">
+								Our Heritage
+							</h2>
+							<p className="text-muted-foreground mb-4">
 								For generations, we have been crafting the finest sarees,
 								bringing together traditional artisanship with contemporary
 								designs. Each piece tells a story of cultural richness and
 								artistic excellence.
 							</p>
-							<p className="text-neutral-600 mb-6">
+							<p className="text-muted-foreground mb-6">
 								Our commitment to quality and authenticity has made us a trusted
 								name in luxury Indian wear.
 							</p>
 							<Button
 								variant="outline"
-								className="border-primary text-primary hover:bg-primary hover:text-white"
+								className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
 							>
 								Learn More
 							</Button>
@@ -120,7 +125,7 @@ export default function Home() {
 			</section>
 
 			{/* Newsletter Section */}
-			<section className="py-20 bg-primary text-white">
+			<section className="py-20 bg-accent text-accent-foreground">
 				<div className="container mx-auto px-4 text-center">
 					<h2 className="text-3xl font-serif mb-6">Stay Connected</h2>
 					<p className="max-w-2xl mx-auto mb-8">
@@ -131,9 +136,9 @@ export default function Home() {
 						<input
 							type="email"
 							placeholder="Enter your email"
-							className="flex-1 px-4 py-2 rounded-lg text-neutral-900"
+							className="flex-1 px-4 py-2 rounded-lg text-foreground bg-background"
 						/>
-						<Button className="bg-white text-primary hover:bg-white/90">
+						<Button className="bg-secondary text-secondary-foreground hover:bg-secondary/90">
 							Subscribe
 						</Button>
 					</form>

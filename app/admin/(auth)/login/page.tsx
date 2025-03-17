@@ -35,8 +35,8 @@ export default function AdminLoginPage() {
 
 	return (
 		<div className="container relative min-h-screen flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-2 lg:px-0">
-			<div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex dark:border-r">
-				<div className="absolute inset-0 bg-primary" />
+			<div className="relative hidden h-full flex-col bg-accent p-10 text-accent-foreground lg:flex dark:border-r">
+				<div className="absolute inset-0 bg-accent" />
 				<div className="relative z-20 flex items-center text-lg font-medium">
 					<Link
 						href="/"
@@ -60,10 +60,10 @@ export default function AdminLoginPage() {
 					</blockquote>
 				</div>
 			</div>
-			<div className="lg:p-8">
+			<div className="lg:p-8 bg-background">
 				<div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
 					<div className="flex flex-col space-y-2 text-center">
-						<h1 className="text-2xl font-semibold tracking-tight">
+						<h1 className="text-2xl font-semibold tracking-tight text-foreground">
 							Admin Login
 						</h1>
 						<p className="text-sm text-muted-foreground">
@@ -103,7 +103,11 @@ export default function AdminLoginPage() {
 								</p>
 							)}
 						</div>
-						<Button type="submit" className="w-full" disabled={isSubmitting}>
+						<Button
+							type="submit"
+							className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+							disabled={isSubmitting}
+						>
 							{isSubmitting ? "Signing in..." : "Sign In"}
 						</Button>
 					</form>
