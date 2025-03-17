@@ -11,7 +11,7 @@ export function generateMetadata(): Metadata {
 
 	// Base URL for the site
 	const baseUrl =
-		process.env.NEXT_PUBLIC_SITE_URL || "https://raffle-luckydraw.vercel.app";
+		process.env.NEXT_PUBLIC_SITE_URL || "https://houseofkayaan.com";
 
 	return baseGenerateMetadata({
 		title: "Home",

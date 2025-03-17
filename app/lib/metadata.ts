@@ -6,7 +6,7 @@ import type { Metadata } from "next";
  */
 export const defaultMetadata: SiteMetadata = {
 	metadataBase: new URL(
-		process.env.NEXT_PUBLIC_SITE_URL || "https://raffle-luckydraw.vercel.app",
+		process.env.NEXT_PUBLIC_SITE_URL || "https://houseofkayaan.com",
 	),
 	title: {
 		default: "Kayaan Prints - Elegant Saree Collection",
@@ -29,7 +29,7 @@ export const defaultMetadata: SiteMetadata = {
 	authors: [
 		{
 			name: "Kayaan Prints",
-			url: "https://raffle-luckydraw.vercel.app",
+			url: "https://houseofkayaan.com",
 		},
 	],
 	creator: "Kayaan Prints",
@@ -42,7 +42,7 @@ export const defaultMetadata: SiteMetadata = {
 	openGraph: {
 		type: "website",
 		locale: "en_IN",
-		url: "https://raffle-luckydraw.vercel.app",
+		url: "https://houseofkayaan.com",
 		siteName: "Kayaan Prints",
 		title: {
 			default: "Kayaan Prints - Elegant Saree Collection",
@@ -92,9 +92,9 @@ export const defaultMetadata: SiteMetadata = {
 		// bing: 'your-bing-verification-token',
 	},
 	alternates: {
-		canonical: "https://raffle-luckydraw.vercel.app",
+		canonical: "https://houseofkayaan.com",
 		languages: {
-			"en-IN": "https://raffle-luckydraw.vercel.app",
+			"en-IN": "https://houseofkayaan.com",
 		},
 	},
 	category: "shopping",
@@ -142,11 +142,10 @@ export function generateWebsiteJsonLd(): JsonLd {
 		"@context": "https://schema.org",
 		"@type": "WebSite",
 		name: "Kayaan Prints",
-		url: "https://raffle-luckydraw.vercel.app",
+		url: "https://houseofkayaan.com",
 		potentialAction: {
 			"@type": "SearchAction",
-			target:
-				"https://raffle-luckydraw.vercel.app/search?q={search_term_string}",
+			target: "https://houseofkayaan.com/search?q={search_term_string}",
 			"query-input": "required name=search_term_string",
 		},
 	};
@@ -161,8 +160,8 @@ export function generateOrganizationJsonLd(): JsonLd {
 		"@context": "https://schema.org",
 		"@type": "Organization",
 		name: "Kayaan Prints",
-		url: "https://raffle-luckydraw.vercel.app",
-		logo: "https://raffle-luckydraw.vercel.app/kayaan-logo.jpeg",
+		url: "https://houseofkayaan.com",
+		logo: "https://houseofkayaan.com/kayaan-logo.jpeg",
 		sameAs: [
 			"https://twitter.com/KayaanLtd",
 			"https://facebook.com/kayaan.prints",
