@@ -254,7 +254,7 @@ export default function Home() {
 
 						{/* Google Maps */}
 						<div className="h-[350px] lg:h-auto relative">
-							<div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
+							<div className="absolute inset-0 bg-gray-200 flex items-center justify-center z-0">
 								<div className="text-center p-6">
 									<div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
 										<svg
@@ -281,7 +281,7 @@ export default function Home() {
 								</div>
 							</div>
 							<iframe
-								src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3719.8032766509186!2d72.83887867597555!3d21.194499980479578!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04e7a95555555%3A0x9a4e362232c32ac8!2sRaghukul%20Market%2C%20Ring%20Rd%2C%20Surat%2C%20Gujarat%20395002!5m2!1sen!2sin"
+								src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3719.4069390311166!2d72.83661807607848!3d21.20750998127878!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04e59411d1563%3A0xc9bd0d885d7c94be!2sRaghukul%20Textile%20Market!5e0!3m2!1sen!2sin!4v1716661234567!5m2!1sen!2sin"
 								width="100%"
 								height="100%"
 								style={{ border: 0, position: "relative", zIndex: 10 }}
