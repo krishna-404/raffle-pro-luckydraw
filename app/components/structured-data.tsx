@@ -45,32 +45,32 @@ function generateOrganizationData(): JsonLdType {
 	return {
 		"@context": "https://schema.org",
 		"@type": "Organization",
-		name: "Raffle & Lucky Draw",
+		name: "Kayaan Prints",
 		url: baseUrl,
-		logo: `${baseUrl}/logo.png`,
+		logo: `${baseUrl}/kayaan-logo.jpeg`,
 		description:
-			"Create and manage raffles and lucky draws for your events and giveaways.",
+			"Discover our exquisite collection of handcrafted sarees, where tradition meets contemporary design.",
 		sameAs: [
-			"https://twitter.com/raffleluckydraw",
-			"https://facebook.com/raffleluckydraw",
-			"https://instagram.com/raffleluckydraw",
+			"https://twitter.com/KayaanLtd",
+			"https://facebook.com/kayaan.prints",
+			"https://instagram.com/kayaanprintspvtltd",
 		],
 		contactPoint: [
 			{
 				"@type": "ContactPoint",
-				telephone: "+1-800-123-4567",
+				telephone: "+91 89328 93893",
 				contactType: "customer service",
-				email: "support@raffle-luckydraw.vercel.app",
-				availableLanguage: ["English"],
+				availableLanguage: ["English", "Hindi", "Gujarati"],
 			},
 		],
 		address: {
 			"@type": "PostalAddress",
-			streetAddress: "123 Raffle Street",
-			addressLocality: "San Francisco",
-			addressRegion: "CA",
-			postalCode: "94103",
-			addressCountry: "US",
+			streetAddress:
+				"F-5723 to 5752, Lift No.6, 3rd Floor, Raghukul Market, Ring Road",
+			addressLocality: "Surat",
+			addressRegion: "Gujarat",
+			postalCode: "395002",
+			addressCountry: "IN",
 		},
 	};
 }
@@ -86,33 +86,35 @@ function generateHomePageData(): JsonLdType[] {
 		{
 			"@context": "https://schema.org",
 			"@type": "WebPage",
-			name: "Raffle & Lucky Draw - Create and manage digital raffles",
+			name: "Kayaan Prints - Elegant Saree Collection",
 			description:
-				"Create and manage raffles and lucky draws for your events and giveaways.",
+				"Discover our exquisite collection of handcrafted sarees, where tradition meets contemporary design.",
 			url: baseUrl,
 			mainEntity: {
-				"@type": "Service",
-				name: "Digital Raffle Platform",
+				"@type": "Store",
+				name: "Kayaan Prints",
 				description:
-					"A platform for creating and managing digital raffles and giveaways",
-				provider: {
-					"@type": "Organization",
-					name: "Raffle & Lucky Draw",
+					"A premium store offering exquisite handcrafted sarees that blend tradition with contemporary design",
+				telephone: "+91 89328 93893",
+				openingHours: "Mo-Sa 10:00-19:00",
+				hasMap: "https://goo.gl/maps/XYZ123",
+				address: {
+					"@type": "PostalAddress",
+					streetAddress:
+						"F-5723 to 5752, Lift No.6, 3rd Floor, Raghukul Market, Ring Road",
+					addressLocality: "Surat",
+					addressRegion: "Gujarat",
+					postalCode: "395002",
+					addressCountry: "IN",
 				},
-				serviceType: "Digital Raffle Service",
 			},
 		},
 		// WebSite structured data
 		{
 			"@context": "https://schema.org",
 			"@type": "WebSite",
-			name: "Raffle & Lucky Draw",
+			name: "Kayaan Prints",
 			url: baseUrl,
-			potentialAction: {
-				"@type": "SearchAction",
-				target: `${baseUrl}/search?q={search_term_string}`,
-				"query-input": "required name=search_term_string",
-			},
 		},
 		// FAQPage structured data
 		{
@@ -121,26 +123,26 @@ function generateHomePageData(): JsonLdType[] {
 			mainEntity: [
 				{
 					"@type": "Question",
-					name: "How do I create a raffle?",
+					name: "What types of sarees does Kayaan Prints offer?",
 					acceptedAnswer: {
 						"@type": "Answer",
-						text: "You can create a raffle by signing up for an account and using our simple raffle creation tool. Just set the details, add prizes, and share the link with participants.",
+						text: "Kayaan Prints offers a wide range of handcrafted sarees that blend traditional craftsmanship with contemporary designs. Our collection includes luxury silk sarees, designer printed sarees, and exclusive festive and wedding collections.",
 					},
 				},
 				{
 					"@type": "Question",
-					name: "Is it free to use?",
+					name: "How can I purchase a saree from Kayaan Prints?",
 					acceptedAnswer: {
 						"@type": "Answer",
-						text: "We offer both free and premium plans. The free plan allows you to create basic raffles with limited participants, while premium plans offer more features and capacity.",
+						text: "You can connect with us directly on WhatsApp or visit our store in Surat. We provide personalized assistance to help you select the perfect saree for your occasion.",
 					},
 				},
 				{
 					"@type": "Question",
-					name: "How are winners selected?",
+					name: "Does Kayaan Prints ship internationally?",
 					acceptedAnswer: {
 						"@type": "Answer",
-						text: "Winners are selected using a cryptographically secure random number generator to ensure fair and unbiased results for all participants.",
+						text: "Yes, we offer international shipping for our exclusive saree collections. Please contact us directly for shipping details and delivery timeframes for your location.",
 					},
 				},
 			],
@@ -163,9 +165,9 @@ function generateGiveawayData(): JsonLdType[] {
 		{
 			"@context": "https://schema.org",
 			"@type": "Event",
-			name: "Raffle & Lucky Draw Giveaway",
+			name: "Kayaan Prints Saree Giveaway",
 			description:
-				"Participate in our exciting raffles and lucky draws to win amazing prizes.",
+				"Participate in our exclusive saree giveaway and win exquisite handcrafted designer sarees from Kayaan Prints.",
 			startDate: startDate,
 			endDate: endDate,
 			eventStatus: "https://schema.org/EventScheduled",
@@ -177,13 +179,13 @@ function generateGiveawayData(): JsonLdType[] {
 			image: `${baseUrl}/giveaway-og-image.png`,
 			organizer: {
 				"@type": "Organization",
-				name: "Raffle & Lucky Draw",
+				name: "Kayaan Prints",
 				url: baseUrl,
 			},
 			offers: {
 				"@type": "Offer",
 				price: "0",
-				priceCurrency: "USD",
+				priceCurrency: "INR",
 				availability: "https://schema.org/InStock",
 				validFrom: startDate,
 				url: `${baseUrl}/giveaway`,
@@ -203,7 +205,7 @@ function generateGiveawayData(): JsonLdType[] {
 				{
 					"@type": "ListItem",
 					position: 2,
-					name: "Giveaway",
+					name: "Saree Giveaway",
 					item: `${baseUrl}/giveaway`,
 				},
 			],

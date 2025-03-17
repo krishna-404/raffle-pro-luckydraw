@@ -5,9 +5,9 @@ import Image from "next/image";
 import Link from "next/link";
 
 export function generateMetadata(): Metadata {
-	const title = "Raffle & Lucky Draw";
+	const title = "Kayaan Prints - Elegant Saree Collection";
 	const description =
-		"Create and manage raffles and lucky draws for your events and giveaways.";
+		"Discover our exquisite collection of handcrafted sarees, where tradition meets contemporary design.";
 
 	// Base URL for the site
 	const baseUrl =
@@ -49,6 +49,18 @@ export function generateMetadata(): Metadata {
 			description,
 			images: [ogImageUrl.toString(), "/twitter-image.png"],
 		},
+		keywords: [
+			"elegant sarees",
+			"handcrafted sarees",
+			"traditional sarees",
+			"designer sarees",
+			"luxury sarees",
+			"Indian wear",
+			"Kayaan Prints",
+			"saree collection",
+			"premium sarees",
+			"wedding sarees",
+		],
 	});
 }
 

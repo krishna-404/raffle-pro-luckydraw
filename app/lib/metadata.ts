@@ -9,31 +9,31 @@ export const defaultMetadata: SiteMetadata = {
 		process.env.NEXT_PUBLIC_SITE_URL || "https://raffle-luckydraw.vercel.app",
 	),
 	title: {
-		default: "Raffle & Lucky Draw",
-		template: "%s | Raffle & Lucky Draw",
+		default: "Kayaan Prints - Elegant Saree Collection",
+		template: "%s | Kayaan Prints",
 	},
 	description:
-		"Create and manage raffles and lucky draws for your events and giveaways.",
+		"Discover our exquisite collection of handcrafted sarees, where tradition meets contemporary design.",
 	keywords: [
-		"raffle",
-		"lucky draw",
-		"giveaway",
-		"contest",
-		"sweepstakes",
-		"prize",
-		"winner selection",
-		"random winner",
-		"online raffle",
-		"digital raffle",
+		"elegant sarees",
+		"handcrafted sarees",
+		"traditional sarees",
+		"designer sarees",
+		"luxury sarees",
+		"Indian wear",
+		"Kayaan Prints",
+		"saree collection",
+		"premium sarees",
+		"wedding sarees",
 	],
 	authors: [
 		{
-			name: "Raffle & Lucky Draw Team",
+			name: "Kayaan Prints",
 			url: "https://raffle-luckydraw.vercel.app",
 		},
 	],
-	creator: "Raffle & Lucky Draw Team",
-	publisher: "Raffle & Lucky Draw",
+	creator: "Kayaan Prints",
+	publisher: "Kayaan Prints Pvt. Ltd.",
 	formatDetection: {
 		email: false,
 		address: false,
@@ -41,33 +41,33 @@ export const defaultMetadata: SiteMetadata = {
 	},
 	openGraph: {
 		type: "website",
-		locale: "en_US",
+		locale: "en_IN",
 		url: "https://raffle-luckydraw.vercel.app",
-		siteName: "Raffle & Lucky Draw",
+		siteName: "Kayaan Prints",
 		title: {
-			default: "Raffle & Lucky Draw",
-			template: "%s | Raffle & Lucky Draw",
+			default: "Kayaan Prints - Elegant Saree Collection",
+			template: "%s | Kayaan Prints",
 		},
 		description:
-			"Create and manage raffles and lucky draws for your events and giveaways.",
+			"Discover our exquisite collection of handcrafted sarees, where tradition meets contemporary design.",
 		images: [
 			{
 				url: "/opengraph-image.png",
 				width: 1200,
 				height: 630,
-				alt: "Raffle & Lucky Draw",
+				alt: "Kayaan Prints - Elegant Saree Collection",
 			},
 		],
 	},
 	twitter: {
 		card: "summary_large_image",
 		title: {
-			default: "Raffle & Lucky Draw",
-			template: "%s | Raffle & Lucky Draw",
+			default: "Kayaan Prints - Elegant Saree Collection",
+			template: "%s | Kayaan Prints",
 		},
 		description:
-			"Create and manage raffles and lucky draws for your events and giveaways.",
-		creator: "@raffleluckydraw",
+			"Discover our exquisite collection of handcrafted sarees, where tradition meets contemporary design.",
+		creator: "@KayaanLtd",
 		images: ["/twitter-image.png"],
 	},
 	robots: {
@@ -94,10 +94,10 @@ export const defaultMetadata: SiteMetadata = {
 	alternates: {
 		canonical: "https://raffle-luckydraw.vercel.app",
 		languages: {
-			"en-US": "https://raffle-luckydraw.vercel.app",
+			"en-IN": "https://raffle-luckydraw.vercel.app",
 		},
 	},
-	category: "technology",
+	category: "shopping",
 };
 
 /**
@@ -141,7 +141,7 @@ export function generateWebsiteJsonLd(): JsonLd {
 	return {
 		"@context": "https://schema.org",
 		"@type": "WebSite",
-		name: "Raffle & Lucky Draw",
+		name: "Kayaan Prints",
 		url: "https://raffle-luckydraw.vercel.app",
 		potentialAction: {
 			"@type": "SearchAction",
@@ -160,13 +160,13 @@ export function generateOrganizationJsonLd(): JsonLd {
 	return {
 		"@context": "https://schema.org",
 		"@type": "Organization",
-		name: "Raffle & Lucky Draw",
+		name: "Kayaan Prints",
 		url: "https://raffle-luckydraw.vercel.app",
-		logo: "https://raffle-luckydraw.vercel.app/logo.png",
+		logo: "https://raffle-luckydraw.vercel.app/kayaan-logo.jpeg",
 		sameAs: [
-			"https://twitter.com/raffleluckydraw",
-			"https://facebook.com/raffleluckydraw",
-			"https://instagram.com/raffleluckydraw",
+			"https://twitter.com/KayaanLtd",
+			"https://facebook.com/kayaan.prints",
+			"https://instagram.com/kayaanprintspvtltd",
 		],
 	};
 }

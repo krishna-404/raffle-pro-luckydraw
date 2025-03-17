@@ -2,9 +2,9 @@ import { generateMetadata as baseGenerateMetadata } from "@/app/lib/metadata";
 import type { Metadata } from "next";
 
 export function generateMetadata(): Metadata {
-	const title = "Giveaway | Raffle & Lucky Draw";
+	const title = "Saree Giveaway | Kayaan Prints";
 	const description =
-		"Participate in our exciting raffles and lucky draws to win amazing prizes.";
+		"Participate in our exclusive saree giveaway and win exquisite handcrafted designer sarees from Kayaan Prints.";
 
 	// Base URL for the site
 	const baseUrl =
@@ -13,24 +13,24 @@ export function generateMetadata(): Metadata {
 
 	// Dynamic OG image URL
 	const ogImageUrl = new URL("/api/og", baseUrl);
-	ogImageUrl.searchParams.set("title", "Win Amazing Prizes!");
+	ogImageUrl.searchParams.set("title", "Win Elegant Designer Sarees!");
 	ogImageUrl.searchParams.set("description", description);
 	ogImageUrl.searchParams.set("route", "/giveaway");
 
 	return baseGenerateMetadata({
-		title: "Giveaway",
+		title: "Saree Giveaway",
 		description,
 		keywords: [
-			"raffle giveaway",
-			"lucky draw contest",
-			"win prizes",
-			"online giveaway",
-			"sweepstakes",
-			"contest entry",
-			"free prizes",
-			"giveaway entry",
-			"raffle tickets",
-			"prize draw",
+			"saree giveaway",
+			"designer saree contest",
+			"win sarees",
+			"Kayaan Prints giveaway",
+			"luxury saree giveaway",
+			"handcrafted sarees",
+			"free saree",
+			"saree contest",
+			"Indian wear giveaway",
+			"traditional saree prize",
 		],
 		openGraph: {
 			title,
@@ -42,20 +42,20 @@ export function generateMetadata(): Metadata {
 					url: ogImageUrl.toString(),
 					width: 1200,
 					height: 630,
-					alt: "Raffle & Lucky Draw Giveaway",
+					alt: "Kayaan Prints Saree Giveaway",
 				},
 				// Fallback images
 				{
 					url: "/giveaway-og-image.png",
 					width: 1200,
 					height: 630,
-					alt: "Raffle & Lucky Draw Giveaway",
+					alt: "Kayaan Prints Saree Giveaway",
 				},
 				{
 					url: "/opengraph-image.png",
 					width: 1200,
 					height: 630,
-					alt: "Raffle & Lucky Draw",
+					alt: "Kayaan Prints",
 				},
 			],
 		},
