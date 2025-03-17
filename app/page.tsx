@@ -6,15 +6,18 @@ export default function Home() {
 	return (
 		<main className="min-h-screen bg-background">
 			{/* Hero Section */}
-			<section className="relative h-[90vh] flex items-center">
+			<section className="relative h-screen w-full flex items-center">
 				<div className="absolute inset-0 z-0">
 					<Image
 						src="/hero-saree.jpg"
 						alt="Elegant Saree Collection"
 						fill
-						className="object-cover brightness-75"
+						className="object-cover"
 						priority
+						sizes="100vw"
 					/>
+					{/* Black overlay for mobile and tablet views */}
+					<div className="absolute inset-0 bg-black/30 md:bg-black/10 lg:bg-transparent" />
 				</div>
 				<div className="container relative z-10 mx-auto px-4">
 					<div className="max-w-2xl text-white">
@@ -27,25 +30,18 @@ export default function Home() {
 								className="rounded-md"
 							/>
 						</div>
-						<h1 className="text-5xl font-serif font-bold mb-6">
+						<h1 className="text-5xl font-serif font-bold mb-6 drop-shadow-md">
 							Timeless Beauty in Every Weave
 						</h1>
-						<p className="text-xl mb-8">
+						<p className="text-xl mb-8 drop-shadow-md">
 							Discover our exquisite collection of handcrafted sarees, where
 							tradition meets contemporary design.
 						</p>
-						<div className="space-x-4">
-							<Button
-								size="lg"
-								className="bg-primary hover:bg-primary/90 text-primary-foreground"
-							>
-								Explore Collection
-							</Button>
+						<div>
 							<Link href="/giveaway">
 								<Button
 									size="lg"
-									variant="outline"
-									className="bg-white/10 hover:bg-white/20 border-white text-white"
+									className="bg-primary hover:bg-primary/90 text-primary-foreground"
 								>
 									Join Giveaway
 								</Button>
@@ -105,12 +101,6 @@ export default function Home() {
 								Our commitment to quality and authenticity has made us a trusted
 								name in luxury Indian wear.
 							</p>
-							<Button
-								variant="outline"
-								className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-							>
-								Learn More
-							</Button>
 						</div>
 						<div className="relative aspect-square">
 							<Image
