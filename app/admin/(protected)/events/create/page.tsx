@@ -2,6 +2,7 @@
 
 import { DashboardHeader } from "@/app/admin/(protected)/components/header";
 import { DashboardShell } from "@/app/admin/(protected)/components/shell";
+import { useEventDates } from "@/app/admin/(protected)/events/hooks/useEventDates";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -119,6 +120,7 @@ type FormData = z.infer<typeof formSchema>;
 
 export default function CreateEventPage() {
 	const router = useRouter();
+	const { eventDates, isLoading: isLoadingDates } = useEventDates();
 	// Initialize form with react-hook-form and zod validation
 	const form = useForm<FormData>({
 		resolver: zodResolver(formSchema),
@@ -216,6 +218,25 @@ export default function CreateEventPage() {
 		onChange(utcDate);
 	};
 
+	// Check if a date is within any existing event's date range
+	const isDateWithinExistingEvent = (date: Date) => {
+		if (!eventDates || eventDates.length === 0) {
+			return false;
+		}
+
+		// Convert the date to start of day in UTC to ensure consistent comparison
+		const dateToCheck = startOfDay(new Date(date));
+
+		return eventDates.some((event) => {
+			// Convert event dates to start of day for comparison
+			const eventStart = startOfDay(new Date(event.startDate));
+			const eventEnd = startOfDay(new Date(event.endDate));
+
+			// Check if the date is within the event's date range (inclusive)
+			return dateToCheck >= eventStart && dateToCheck <= eventEnd;
+		});
+	};
+
 	return (
 		<DashboardShell>
 			<DashboardHeader
@@ -296,19 +317,41 @@ export default function CreateEventPage() {
 													</FormControl>
 												</PopoverTrigger>
 												<PopoverContent className="w-auto p-0" align="start">
-													<Calendar
-														mode="single"
-														selected={field.value}
-														onSelect={(date) =>
-															handleDateSelect(date, field.onChange)
-														}
-														disabled={(date) =>
-															date
-																? isBefore(date, startOfDay(new Date()))
-																: false
-														}
-														initialFocus
-													/>
+													{isLoadingDates ? (
+														<div className="flex items-center justify-center p-4">
+															<Loader2 className="h-4 w-4 animate-spin" />
+															<span className="ml-2">Loading dates...</span>
+														</div>
+													) : (
+														<Calendar
+															mode="single"
+															selected={field.value}
+															onSelect={(date) =>
+																handleDateSelect(date, field.onChange)
+															}
+															disabled={(date) => {
+																if (!date) return false;
+
+																// Create a new date at midnight to ensure consistent comparison
+																const dateToCheck = new Date(
+																	date.getFullYear(),
+																	date.getMonth(),
+																	date.getDate(),
+																);
+
+																// Disable if date is before today
+																const today = startOfDay(new Date());
+																const isPastDate = dateToCheck < today;
+
+																// Disable if date is within an existing event
+																const isBooked =
+																	isDateWithinExistingEvent(dateToCheck);
+
+																return isPastDate || isBooked;
+															}}
+															initialFocus
+														/>
+													)}
 												</PopoverContent>
 											</Popover>
 											<FormMessage />
@@ -347,42 +390,58 @@ export default function CreateEventPage() {
 													</FormControl>
 												</PopoverTrigger>
 												<PopoverContent className="w-auto p-0" align="start">
-													<Calendar
-														mode="single"
-														selected={field.value}
-														onSelect={(date) =>
-															handleDateSelect(date, field.onChange)
-														}
-														disabled={(date) => {
-															const today = startOfDay(new Date());
-															const startDate = form.getValues("start_date");
+													{isLoadingDates ? (
+														<div className="flex items-center justify-center p-4">
+															<Loader2 className="h-4 w-4 animate-spin" />
+															<span className="ml-2">Loading dates...</span>
+														</div>
+													) : (
+														<Calendar
+															mode="single"
+															selected={field.value}
+															onSelect={(date) =>
+																handleDateSelect(date, field.onChange)
+															}
+															disabled={(date) => {
+																if (!date) return false;
 
-															// Disable if date is before today
-															if (date && isBefore(date, today)) return true;
+																// Create a new date at midnight to ensure consistent comparison
+																const dateToCheck = new Date(
+																	date.getFullYear(),
+																	date.getMonth(),
+																	date.getDate(),
+																);
 
-															// Disable if date is same as or before start date
-															if (date && startDate) {
-																const startUtc = new Date(
-																	Date.UTC(
+																// Disable if date is before today
+																const today = startOfDay(new Date());
+																const isPastDate = dateToCheck < today;
+
+																// Disable if date is within an existing event
+																const isBooked =
+																	isDateWithinExistingEvent(dateToCheck);
+
+																// Disable if date is same as or before start date
+																let isBeforeStartDate = false;
+																const startDate = form.getValues("start_date");
+																if (startDate) {
+																	// Convert both dates to midnight for comparison
+																	const startToCompare = new Date(
 																		startDate.getFullYear(),
 																		startDate.getMonth(),
 																		startDate.getDate(),
-																	),
-																);
-																const dateUtc = new Date(
-																	Date.UTC(
-																		date.getFullYear(),
-																		date.getMonth(),
-																		date.getDate(),
-																	),
-																);
-																return dateUtc.getTime() <= startUtc.getTime();
-															}
+																	);
 
-															return false;
-														}}
-														initialFocus
-													/>
+																	isBeforeStartDate =
+																		dateToCheck <= startToCompare;
+																}
+
+																return (
+																	isPastDate || isBooked || isBeforeStartDate
+																);
+															}}
+															initialFocus
+														/>
+													)}
 												</PopoverContent>
 											</Popover>
 											<FormMessage />
