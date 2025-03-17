@@ -338,6 +338,26 @@ export async function submitEntry(
 			throw new Error("Event not found");
 		}
 
+		// Check if QR code is already used (double-check before insertion)
+		// This helps prevent race conditions when two users scan the same QR code
+		const { data: existingEntry } = await supabase
+			.from("event_entries")
+			.select("id")
+			.eq("qr_code_id", qrCode)
+			.single();
+
+		if (existingEntry) {
+			await logAttempt(
+				ip,
+				userAgent,
+				"entry_submission",
+				qrCode,
+				false,
+				"QR code already used",
+			);
+			return { error: "This QR code has already been used" };
+		}
+
 		// Generate and verify unique entry code
 		let entryCode = generateEntryCode();
 		let isUnique = false;
@@ -386,13 +406,31 @@ export async function submitEntry(
 			whatsapp_number: data.whatsappNumber,
 			address: data.address,
 			city: data.city,
-			pincode: Number.parseInt(data.pincode),
+			pincode: data.pincode,
 			request_ip_address: ip,
 			request_user_agent: userAgent,
 		});
 
 		if (insertError) {
 			console.error("Entry insertion error:", insertError);
+
+			// Check if this is a unique constraint violation
+			if (
+				insertError.message?.includes("unique constraint") ||
+				insertError.message?.includes("event_entries_qr_code_id_unique") ||
+				insertError.message?.includes("duplicate key value")
+			) {
+				await logAttempt(
+					ip,
+					userAgent,
+					"entry_submission",
+					qrCode,
+					false,
+					"QR code already used (constraint violation)",
+				);
+				return { error: "This QR code has already been used by someone else" };
+			}
+
 			await logAttempt(
 				ip,
 				userAgent,
