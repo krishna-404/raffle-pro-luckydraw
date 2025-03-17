@@ -69,16 +69,11 @@ export default function SuccessPage() {
 		eventName: string;
 		eventEndDate?: string;
 	} | null>(null);
-	const [isVerifying, setIsVerifying] = useState(false);
 
 	useEffect(() => {
 		let isMounted = true;
 
 		const verify = async () => {
-			// Prevent multiple verifications
-			if (isVerifying) return;
-			setIsVerifying(true);
-
 			try {
 				const result = await verifyEntry();
 
@@ -94,27 +89,26 @@ export default function SuccessPage() {
 							eventEndDate: result.eventEndDate,
 						});
 					}
+					// Always set loading to false when verification completes
+					setLoading(false);
 				}
 			} catch (error) {
 				console.error("Verification error:", error);
 				if (isMounted) {
 					setError("Failed to verify entry");
-				}
-			} finally {
-				if (isMounted) {
 					setLoading(false);
-					setIsVerifying(false);
 				}
 			}
 		};
 
+		// Run verification once on mount
 		verify();
 
 		// Cleanup function
 		return () => {
 			isMounted = false;
 		};
-	}, [isVerifying]);
+	}, []); // Empty dependency array to run only once on mount
 
 	if (loading) {
 		return (
