@@ -1,12 +1,8 @@
 import { RootLayoutWrapper } from "@/components/layout/root-layout";
 import { Inter, Playfair_Display } from "next/font/google";
-import { JsonLd } from "./components/json-ld";
+import { StructuredData } from "./components/structured-data";
 import "./globals.css";
-import {
-	defaultMetadata,
-	generateOrganizationJsonLd,
-	generateWebsiteJsonLd,
-} from "./lib/metadata";
+import { defaultMetadata } from "./lib/metadata";
 
 const inter = Inter({ subsets: ["latin"] });
 const playfair = Playfair_Display({
@@ -24,8 +20,8 @@ export default function RootLayout({
 	return (
 		<html lang="en" className={`${inter.className} ${playfair.variable}`}>
 			<head>
-				<JsonLd data={generateWebsiteJsonLd()} />
-				<JsonLd data={generateOrganizationJsonLd()} />
+				{/* Route-specific structured data will be injected by the StructuredData component */}
+				<StructuredData />
 			</head>
 			<body className="min-h-screen flex flex-col">
 				<RootLayoutWrapper>{children}</RootLayoutWrapper>

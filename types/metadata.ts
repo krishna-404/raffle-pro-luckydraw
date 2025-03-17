@@ -70,19 +70,22 @@ export interface PageMetadata extends Partial<SiteMetadata> {
 /**
  * JSON-LD structured data types
  */
-export type JsonLdType =
-	| "Organization"
-	| "LocalBusiness"
-	| "Person"
-	| "Product"
-	| "Article"
-	| "BreadcrumbList"
-	| "FAQPage"
-	| "Event"
-	| "Recipe"
-	| "WebSite"
-	| "WebPage"
-	| "SearchAction";
+export type JsonLdType = string;
+
+/**
+ * Generic schema.org object type for nested objects
+ */
+export interface SchemaObject {
+	"@type"?: string;
+	[key: string]:
+		| string
+		| number
+		| boolean
+		| null
+		| undefined
+		| SchemaObject
+		| Array<string | number | boolean | SchemaObject | null | undefined>;
+}
 
 /**
  * JSON-LD structured data interface
@@ -96,8 +99,11 @@ export interface JsonLd {
 		| boolean
 		| null
 		| undefined
+		| SchemaObject
 		| JsonLd
-		| Array<string | number | boolean | null | undefined | JsonLd>;
+		| Array<
+				string | number | boolean | SchemaObject | JsonLd | null | undefined
+		  >;
 }
 
 /**
