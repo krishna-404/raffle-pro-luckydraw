@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient as createServerClient } from "@/utils/supabase/server";
 
 // Define types for the message service
 export type MessageRecipient = {
@@ -24,11 +24,6 @@ export type MessageLogEntry = {
 	responseData?: Record<string, unknown>;
 	errorMessage?: string;
 };
-
-// Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 /**
  * Message Service for sending SMS/WhatsApp messages using MSG91
@@ -176,7 +171,9 @@ export class MessageService {
 	 */
 	private async logMessage(logEntry: MessageLogEntry): Promise<void> {
 		try {
-			await supabase.from("message_logs").insert({
+			const supabase = await createServerClient();
+
+			const { error } = await supabase.from("message_logs").insert({
 				template_id: logEntry.templateId,
 				recipient_mobile: logEntry.recipientMobile,
 				event_id: logEntry.eventId,
@@ -186,6 +183,10 @@ export class MessageService {
 				response_data: logEntry.responseData,
 				error_message: logEntry.errorMessage,
 			});
+
+			if (error) {
+				console.error("Failed to log message:", error);
+			}
 		} catch (error) {
 			console.error("Failed to log message:", error);
 		}
