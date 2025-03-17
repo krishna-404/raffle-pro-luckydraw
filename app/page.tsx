@@ -5,24 +5,49 @@ import Image from "next/image";
 import Link from "next/link";
 
 export function generateMetadata(): Metadata {
+	const title = "Raffle & Lucky Draw";
+	const description =
+		"Create and manage raffles and lucky draws for your events and giveaways.";
+
+	// Base URL for the site
+	const baseUrl =
+		process.env.NEXT_PUBLIC_SITE_URL || "https://raffle-luckydraw.vercel.app";
+
+	// Dynamic OG image URL
+	const ogImageUrl = new URL("/api/og", baseUrl);
+	ogImageUrl.searchParams.set("title", title);
+	ogImageUrl.searchParams.set("description", description);
+	ogImageUrl.searchParams.set("route", "/");
+
 	return baseGenerateMetadata({
 		title: "Home",
-		description:
-			"Create and manage raffles and lucky draws for your events and giveaways.",
+		description,
 		useTitleTemplate: false,
 		openGraph: {
-			title: "Raffle & Lucky Draw",
-			description:
-				"Create and manage raffles and lucky draws for your events and giveaways.",
-			url: "https://raffle-luckydraw.vercel.app",
+			title,
+			description,
+			url: baseUrl,
 			images: [
+				{
+					url: ogImageUrl.toString(),
+					width: 1200,
+					height: 630,
+					alt: title,
+				},
+				// Fallback static image
 				{
 					url: "/opengraph-image.png",
 					width: 1200,
 					height: 630,
-					alt: "Raffle & Lucky Draw",
+					alt: title,
 				},
 			],
+		},
+		twitter: {
+			card: "summary_large_image",
+			title,
+			description,
+			images: [ogImageUrl.toString(), "/twitter-image.png"],
 		},
 	});
 }

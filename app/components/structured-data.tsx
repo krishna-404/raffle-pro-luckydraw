@@ -40,12 +40,14 @@ export function StructuredData() {
  * Generate Organization structured data
  */
 function generateOrganizationData(): JsonLdType {
+	const baseUrl = "https://raffle-luckydraw.vercel.app";
+
 	return {
 		"@context": "https://schema.org",
 		"@type": "Organization",
 		name: "Raffle & Lucky Draw",
-		url: "https://raffle-luckydraw.vercel.app",
-		logo: "https://raffle-luckydraw.vercel.app/logo.png",
+		url: baseUrl,
+		logo: `${baseUrl}/logo.png`,
 		description:
 			"Create and manage raffles and lucky draws for your events and giveaways.",
 		sameAs: [
@@ -53,61 +55,158 @@ function generateOrganizationData(): JsonLdType {
 			"https://facebook.com/raffleluckydraw",
 			"https://instagram.com/raffleluckydraw",
 		],
+		contactPoint: [
+			{
+				"@type": "ContactPoint",
+				telephone: "+1-800-123-4567",
+				contactType: "customer service",
+				email: "support@raffle-luckydraw.vercel.app",
+				availableLanguage: ["English"],
+			},
+		],
+		address: {
+			"@type": "PostalAddress",
+			streetAddress: "123 Raffle Street",
+			addressLocality: "San Francisco",
+			addressRegion: "CA",
+			postalCode: "94103",
+			addressCountry: "US",
+		},
 	};
 }
 
 /**
  * Generate HomePage specific structured data
  */
-function generateHomePageData(): JsonLdType {
-	return {
-		"@context": "https://schema.org",
-		"@type": "WebPage",
-		name: "Raffle & Lucky Draw - Create and manage digital raffles",
-		description:
-			"Create and manage raffles and lucky draws for your events and giveaways.",
-		url: "https://raffle-luckydraw.vercel.app",
-		mainEntity: {
-			"@type": "Service",
-			name: "Digital Raffle Platform",
+function generateHomePageData(): JsonLdType[] {
+	const baseUrl = "https://raffle-luckydraw.vercel.app";
+
+	return [
+		// WebPage structured data
+		{
+			"@context": "https://schema.org",
+			"@type": "WebPage",
+			name: "Raffle & Lucky Draw - Create and manage digital raffles",
 			description:
-				"A platform for creating and managing digital raffles and giveaways",
-			provider: {
-				"@type": "Organization",
-				name: "Raffle & Lucky Draw",
+				"Create and manage raffles and lucky draws for your events and giveaways.",
+			url: baseUrl,
+			mainEntity: {
+				"@type": "Service",
+				name: "Digital Raffle Platform",
+				description:
+					"A platform for creating and managing digital raffles and giveaways",
+				provider: {
+					"@type": "Organization",
+					name: "Raffle & Lucky Draw",
+				},
+				serviceType: "Digital Raffle Service",
 			},
-			serviceType: "Digital Raffle Service",
 		},
-	};
+		// WebSite structured data
+		{
+			"@context": "https://schema.org",
+			"@type": "WebSite",
+			name: "Raffle & Lucky Draw",
+			url: baseUrl,
+			potentialAction: {
+				"@type": "SearchAction",
+				target: `${baseUrl}/search?q={search_term_string}`,
+				"query-input": "required name=search_term_string",
+			},
+		},
+		// FAQPage structured data
+		{
+			"@context": "https://schema.org",
+			"@type": "FAQPage",
+			mainEntity: [
+				{
+					"@type": "Question",
+					name: "How do I create a raffle?",
+					acceptedAnswer: {
+						"@type": "Answer",
+						text: "You can create a raffle by signing up for an account and using our simple raffle creation tool. Just set the details, add prizes, and share the link with participants.",
+					},
+				},
+				{
+					"@type": "Question",
+					name: "Is it free to use?",
+					acceptedAnswer: {
+						"@type": "Answer",
+						text: "We offer both free and premium plans. The free plan allows you to create basic raffles with limited participants, while premium plans offer more features and capacity.",
+					},
+				},
+				{
+					"@type": "Question",
+					name: "How are winners selected?",
+					acceptedAnswer: {
+						"@type": "Answer",
+						text: "Winners are selected using a cryptographically secure random number generator to ensure fair and unbiased results for all participants.",
+					},
+				},
+			],
+		},
+	];
 }
 
 /**
  * Generate Giveaway page specific structured data
  */
-function generateGiveawayData(): JsonLdType {
+function generateGiveawayData(): JsonLdType[] {
 	// Use static dates to avoid hydration mismatch
 	const startDate = "2025-03-01T00:00:00Z";
 	const endDate = "2025-12-30T23:59:59Z";
+	const baseUrl = "https://raffle-luckydraw.vercel.app";
 
-	return {
-		"@context": "https://schema.org",
-		"@type": "Event",
-		name: "Raffle & Lucky Draw Giveaway",
-		description:
-			"Participate in our exciting raffles and lucky draws to win amazing prizes.",
-		startDate: startDate,
-		endDate: endDate,
-		eventStatus: "https://schema.org/EventScheduled",
-		eventAttendanceMode: "https://schema.org/OnlineEventAttendanceMode",
-		location: {
-			"@type": "VirtualLocation",
-			url: "https://raffle-luckydraw.vercel.app/giveaway",
+	// Create an array of structured data objects
+	return [
+		// Event structured data
+		{
+			"@context": "https://schema.org",
+			"@type": "Event",
+			name: "Raffle & Lucky Draw Giveaway",
+			description:
+				"Participate in our exciting raffles and lucky draws to win amazing prizes.",
+			startDate: startDate,
+			endDate: endDate,
+			eventStatus: "https://schema.org/EventScheduled",
+			eventAttendanceMode: "https://schema.org/OnlineEventAttendanceMode",
+			location: {
+				"@type": "VirtualLocation",
+				url: `${baseUrl}/giveaway`,
+			},
+			image: `${baseUrl}/giveaway-og-image.png`,
+			organizer: {
+				"@type": "Organization",
+				name: "Raffle & Lucky Draw",
+				url: baseUrl,
+			},
+			offers: {
+				"@type": "Offer",
+				price: "0",
+				priceCurrency: "USD",
+				availability: "https://schema.org/InStock",
+				validFrom: startDate,
+				url: `${baseUrl}/giveaway`,
+			},
 		},
-		image: "https://raffle-luckydraw.vercel.app/giveaway-og-image.png",
-		organizer: {
-			"@type": "Organization",
-			name: "Raffle & Lucky Draw",
-			url: "https://raffle-luckydraw.vercel.app",
+		// BreadcrumbList structured data
+		{
+			"@context": "https://schema.org",
+			"@type": "BreadcrumbList",
+			itemListElement: [
+				{
+					"@type": "ListItem",
+					position: 1,
+					name: "Home",
+					item: baseUrl,
+				},
+				{
+					"@type": "ListItem",
+					position: 2,
+					name: "Giveaway",
+					item: `${baseUrl}/giveaway`,
+				},
+			],
 		},
-	};
+	];
 }
