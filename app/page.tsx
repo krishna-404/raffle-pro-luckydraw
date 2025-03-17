@@ -124,24 +124,38 @@ export default function Home() {
 				</div>
 			</section>
 
-			{/* Newsletter Section */}
-			<section className="py-20 bg-accent text-accent-foreground">
+			{/* Stay Connected Section */}
+			<section className="py-20 bg-accent">
 				<div className="container mx-auto px-4 text-center">
-					<h2 className="text-3xl font-serif mb-6">Stay Connected</h2>
-					<p className="max-w-2xl mx-auto mb-8">
-						Subscribe to our newsletter for exclusive updates, new collection
-						launches, and special offers.
+					<h2 className="text-3xl font-serif mb-6 text-white">
+						Stay Connected
+					</h2>
+					<p className="max-w-2xl mx-auto mb-8 text-white">
+						Connect with us directly on WhatsApp for exclusive updates, new
+						collection launches, and special offers.
 					</p>
-					<form className="max-w-md mx-auto flex gap-4">
-						<input
-							type="email"
-							placeholder="Enter your email"
-							className="flex-1 px-4 py-2 rounded-lg text-foreground bg-background"
-						/>
-						<Button className="bg-secondary text-secondary-foreground hover:bg-secondary/90">
-							Subscribe
-						</Button>
-					</form>
+					<a
+						href="https://wa.me/919925559041?text=Hello%20Kayaan%2C%20I%20visited%20your%20website%20and%20I'm%20interested%20in%20your%20saree%20collection.%20Could%20you%20please%20share%20more%20details%3F"
+						target="_blank"
+						rel="noopener noreferrer"
+						className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-lg transition-colors"
+					>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="24"
+							height="24"
+							viewBox="0 0 24 24"
+							fill="currentColor"
+							className="h-5 w-5"
+							aria-labelledby="whatsappIconTitle"
+							role="img"
+						>
+							<title id="whatsappIconTitle">WhatsApp Icon</title>
+							<path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
+							<path d="M12 2a10 10 0 0 1 10 10 10 10 0 0 1-10 10c-1.97 0-3.8-.57-5.35-1.55L2 22l1.55-4.65A9.969 9.969 0 0 1 2 12 10 10 0 0 1 12 2m0 2a8 8 0 0 0-8 8c0 1.72.54 3.31 1.46 4.61L4.5 19.5l2.89-.96A7.95 7.95 0 0 0 12 20a8 8 0 0 0 8-8 8 8 0 0 0-8-8z" />
+						</svg>
+						Connect on WhatsApp
+					</a>
 				</div>
 			</section>
 		</main>
