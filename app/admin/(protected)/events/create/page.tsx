@@ -40,7 +40,6 @@ import {
 import { useRouter } from "next/navigation";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
-import { createEvent } from "./actions";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = [
@@ -138,8 +137,44 @@ export default function CreateEventPage() {
 	// Handle form submission
 	const onSubmit = async (data: FormData) => {
 		try {
-			// At this point, dates are in UTC midnight
-			await createEvent(data);
+			// Create a FormData object to properly handle File objects
+			const formData = new FormData();
+
+			// Add basic event data
+			formData.append("name", data.name);
+			formData.append("description", data.description || "");
+			formData.append("start_date", data.start_date.toISOString());
+			formData.append("end_date", data.end_date.toISOString());
+
+			// Add prizes data without images first
+			const prizesWithoutImages = data.prizes.map((prize, index) => ({
+				name: prize.name,
+				description: prize.description || "",
+				seniority_index: index,
+			}));
+			formData.append("prizes", JSON.stringify(prizesWithoutImages));
+
+			// Add prize images separately
+			data.prizes.forEach((prize, index) => {
+				if (prize.image) {
+					formData.append(`prize_image_${index}`, prize.image);
+				}
+			});
+
+			// Use the API route with FormData
+			const response = await fetch("/api/admin/events/create", {
+				method: "POST",
+				body: formData,
+			});
+
+			const result = await response.json();
+
+			if (!response.ok) {
+				// Handle error response from API
+				throw new Error(result.error || "Failed to create event");
+			}
+
+			// Success - redirect to events page
 			router.push("/admin/events");
 			router.refresh();
 		} catch (error) {

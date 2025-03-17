@@ -1,174 +1,70 @@
-'use server';
+"use server";
 
 import { createClient } from "@/utils/supabase/server";
-import { SupabaseClient } from "@supabase/supabase-js";
-import { revalidatePath } from "next/cache";
 
+// We keep the Prize type for reference and potential future use
 export type Prize = {
-  name: string;
-  description: string;
-  image: File | null;
-  seniority_index: number;
+	name: string;
+	description: string;
+	image: File | null;
+	seniority_index: number;
 };
 
 export type CreateEventData = {
-  name: string;
-  description: string;
-  start_date: Date;
-  end_date: Date;
-  prizes: Prize[];
+	name: string;
+	description: string;
+	start_date: Date;
+	end_date: Date;
+	prizes: Prize[];
 };
-
-async function handlePrizeImageUpload(
-  supabase: SupabaseClient,
-  image: File,
-  fileName: string,
-  prizeId: string
-) {
-  if (image.size > 5 * 1024 * 1024) { // 5MB
-    throw new Error(`Image ${image.name} exceeds 5MB limit`);
-  }
-
-  const { error: uploadError } = await supabase.storage
-    .from('prize-images')
-    .upload(fileName, image);
-
-  if (uploadError) {
-    throw new Error(`Failed to upload prize image: ${uploadError.message}`);
-  }
-
-  const { data: { publicUrl } } = supabase.storage
-    .from('prize-images')
-    .getPublicUrl(fileName);
-
-  const { error: updateError } = await supabase
-    .from('prizes')
-    .update({ image_url: publicUrl })
-    .eq('id', prizeId);
-
-  if (updateError) {
-    throw new Error(`Failed to update prize image URL: ${updateError.message}`);
-  }
-}
 
 /**
  * Checks if a new event's dates overlap with any existing events
- * 
+ *
  * Overlap scenarios:
  * 1. New event overlaps with start of existing event
  *    Existing: |-------|
  *    New:    |-------|
- * 
+ *
  * 2. New event overlaps with end of existing event
  *    Existing: |-------|
  *    New:        |-------|
- * 
+ *
  * 3. New event is completely within existing event
  *    Existing: |----------|
  *    New:        |-----|
- * 
+ *
  * 4. New event completely encompasses existing event
  *    Existing:    |--|
  *    New:      |-------|
- * 
+ *
  * 5. Exact date match
  *    Existing: |-------|
  *    New:      |-------|
  */
-export async function checkDateOverlap(start_date: Date, end_date: Date): Promise<{ hasOverlap: boolean; eventName?: string }> {
-  const supabase = await createClient();
+export async function checkDateOverlap(
+	start_date: Date,
+	end_date: Date,
+): Promise<{ hasOverlap: boolean; eventName?: string }> {
+	const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from('events')
-    .select('name')
-    .or(
-      `and(start_date.lte.${end_date.toISOString()},end_date.gte.${start_date.toISOString()}),` +
-      `and(start_date.gte.${start_date.toISOString()},end_date.lte.${end_date.toISOString()})`
-    );
+	const { data, error } = await supabase
+		.from("events")
+		.select("name")
+		.or(
+			`and(start_date.lte.${end_date.toISOString()},end_date.gte.${start_date.toISOString()}),` +
+				`and(start_date.gte.${start_date.toISOString()},end_date.lte.${end_date.toISOString()})`,
+		);
 
-  if (error) {
-    throw new Error(`Failed to check date overlap: ${error.message}`);
-  }
+	if (error) {
+		throw new Error(`Failed to check date overlap: ${error.message}`);
+	}
 
-  // Check if we have any overlapping events
-  const hasOverlappingEvent = data && data.length > 0;
-  
-  return {
-    hasOverlap: hasOverlappingEvent,
-    eventName: hasOverlappingEvent ? data[0].name : undefined
-  };
+	// Check if we have any overlapping events
+	const hasOverlappingEvent = data && data.length > 0;
+
+	return {
+		hasOverlap: hasOverlappingEvent,
+		eventName: hasOverlappingEvent ? data[0].name : undefined,
+	};
 }
-
-export async function createEvent(data: CreateEventData) {
-  try {
-    const supabase = await createClient();
-
-    // Get current user's email
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user?.email) {
-      throw new Error('Not authenticated');
-    }
-
-    // Check for date overlap
-    const { hasOverlap, eventName } = await checkDateOverlap(data.start_date, data.end_date);
-    if (hasOverlap) {
-      throw new Error(`Event dates overlap with existing event "${eventName}"`);
-    }
-
-    // Use the create_event_with_prizes RPC function
-    const { data: result, error: createError } = await supabase.rpc('create_event_with_prizes', {
-      event_data: {
-        name: data.name,
-        description: data.description,
-        start_date: data.start_date.toISOString(),
-        end_date: data.end_date.toISOString(),
-        created_by_admin: user.email
-      },
-      prizes_data: data.prizes.map((prize, index) => ({
-        name: prize.name,
-        description: prize.description,
-        seniority_index: index,
-        image_url: null
-      }))
-    });
-
-    if (createError) {
-      throw new Error(`Failed to create event: ${createError.message}`);
-    }
-
-    if (!result || !result.event_id || !result.prize_ids) {
-      throw new Error('Invalid response from create_event_with_prizes');
-    }
-
-    const eventId = result.event_id;
-    const prizeIds = result.prize_ids;
-
-    if (!Array.isArray(prizeIds) || prizeIds.length !== data.prizes.length) {
-      throw new Error('Mismatch between prizes and returned prize IDs');
-    }
-
-    // Handle image uploads after successful transaction
-    for (let i = 0; i < data.prizes.length; i++) {
-      const prize = data.prizes[i];
-      const prizeId = prizeIds[i];
-
-      if (!prizeId) {
-        console.error(`Missing prize ID for index ${i}`);
-        continue;
-      }
-
-      if (prize.image) {
-        const fileName = `${eventId}/${prizeId}/${prize.image.name}`;
-        await handlePrizeImageUpload(supabase, prize.image, fileName, prizeId);
-      }
-    }
-
-    revalidatePath('/admin/events');
-    return { eventId };
-  } catch (error) {
-    // Ensure error is properly propagated
-    throw error instanceof Error 
-      ? error 
-      : new Error('Failed to create event');
-  }
-} 
