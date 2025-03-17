@@ -94,6 +94,13 @@ export default function GiveawayPage() {
 			<div className="container mx-auto max-w-6xl">
 				{/* Hero Section */}
 				<div className="text-center space-y-6 mb-16">
+					<div className="flex justify-center mb-6">
+						<img
+							src="/kayaan-logo.jpeg"
+							alt="Kayaan Logo"
+							className="h-24 md:h-32 object-contain"
+						/>
+					</div>
 					<h1 className="text-4xl md:text-6xl font-serif font-bold">
 						{event.name}
 					</h1>
