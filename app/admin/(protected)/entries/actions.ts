@@ -75,3 +75,27 @@ export async function getEntries(
 		totalPages,
 	};
 }
+
+export async function deleteEntry(
+	entryId: string,
+): Promise<{ success: boolean; error?: string }> {
+	try {
+		const supabase = await createClient();
+
+		// Delete the entry
+		const { error } = await supabase
+			.from("event_entries")
+			.delete()
+			.eq("id", entryId);
+
+		if (error) {
+			console.error("Error deleting entry:", error);
+			return { success: false, error: "Failed to delete entry" };
+		}
+
+		return { success: true };
+	} catch (error) {
+		console.error("Error in deleteEntry:", error);
+		return { success: false, error: "An unexpected error occurred" };
+	}
+}

@@ -2,6 +2,16 @@
 
 import { DashboardHeader } from "@/app/admin/(protected)/components/header";
 import { DashboardShell } from "@/app/admin/(protected)/components/shell";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
 	Table,
@@ -11,18 +21,27 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import { useToast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
-import { ChevronLeft, ChevronRight, Download, Eye } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Eye, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { type Entry, type PaginationParams, getEntries } from "./actions";
+import {
+	type Entry,
+	type PaginationParams,
+	deleteEntry,
+	getEntries,
+} from "./actions";
 import { EntryDetails } from "./components/entry-details";
 
 export default function EntriesPage() {
+	const { toast } = useToast();
 	const [entries, setEntries] = useState<Entry[]>([]);
 	const [total, setTotal] = useState(0);
 	const [loading, setLoading] = useState(true);
 	const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
 	const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+	const [entryToDelete, setEntryToDelete] = useState<Entry | null>(null);
 	const [pagination, setPagination] = useState<{
 		page: number;
 		pageSize: number;
@@ -85,6 +104,42 @@ export default function EntriesPage() {
 	const handleViewDetails = (entry: Entry) => {
 		setSelectedEntry(entry);
 		setIsDetailsOpen(true);
+	};
+
+	const handleDelete = async (entry: Entry) => {
+		setEntryToDelete(entry);
+		setIsDeleteDialogOpen(true);
+	};
+
+	const confirmDelete = async () => {
+		if (!entryToDelete) return;
+
+		try {
+			const result = await deleteEntry(entryToDelete.id);
+			if (result.success) {
+				toast({
+					title: "Entry deleted",
+					description: "The entry has been successfully deleted.",
+				});
+				// Refresh the entries list
+				fetchEntries({ page: pagination.page, pageSize: pagination.pageSize });
+			} else {
+				toast({
+					title: "Error",
+					description: result.error || "Failed to delete entry",
+					variant: "destructive",
+				});
+			}
+		} catch (error) {
+			toast({
+				title: "Error",
+				description: "An unexpected error occurred",
+				variant: "destructive",
+			});
+		} finally {
+			setIsDeleteDialogOpen(false);
+			setEntryToDelete(null);
+		}
 	};
 
 	return (
@@ -164,14 +219,25 @@ export default function EntriesPage() {
 											{format(new Date(entry.created_at), "PPp")}
 										</TableCell>
 										<TableCell>
-											<Button
-												variant="ghost"
-												size="icon"
-												onClick={() => handleViewDetails(entry)}
-												title="View details"
-											>
-												<Eye className="h-4 w-4" />
-											</Button>
+											<div className="flex items-center gap-1">
+												<Button
+													variant="ghost"
+													size="icon"
+													onClick={() => handleViewDetails(entry)}
+													title="View details"
+												>
+													<Eye className="h-4 w-4" />
+												</Button>
+												<Button
+													variant="ghost"
+													size="icon"
+													onClick={() => handleDelete(entry)}
+													title="Delete entry"
+													className="text-red-600 hover:text-red-50 hover:bg-red-600 dark:text-red-500 dark:hover:text-red-50 dark:hover:bg-red-600"
+												>
+													<Trash2 className="h-4 w-4" />
+												</Button>
+											</div>
 										</TableCell>
 									</TableRow>
 								))
@@ -232,6 +298,40 @@ export default function EntriesPage() {
 				isOpen={isDetailsOpen}
 				onClose={() => setIsDetailsOpen(false)}
 			/>
+
+			<AlertDialog
+				open={isDeleteDialogOpen}
+				onOpenChange={setIsDeleteDialogOpen}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Delete Entry</AlertDialogTitle>
+						<AlertDialogDescription className="text-muted-foreground">
+							Are you sure you want to delete this entry? This action cannot be
+							undone.
+						</AlertDialogDescription>
+						{entryToDelete && (
+							<div className="mt-4 rounded-md bg-muted p-3">
+								<div className="font-medium">Entry Details:</div>
+								<div className="mt-1 text-sm text-muted-foreground">
+									<div>Name: {entryToDelete.name}</div>
+									<div>Event: {entryToDelete.event_name}</div>
+									<div>WhatsApp: {entryToDelete.whatsapp_number}</div>
+								</div>
+							</div>
+						)}
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>Cancel</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={confirmDelete}
+							className="bg-red-600 text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 dark:text-white focus:ring-red-600"
+						>
+							Delete
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</DashboardShell>
 	);
 }
