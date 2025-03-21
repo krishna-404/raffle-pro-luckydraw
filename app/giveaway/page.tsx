@@ -220,26 +220,25 @@ export default function GiveawayPage() {
 													{format(new Date(pastEvent.end_date), "MMM dd, yyyy")}
 												</p>
 											</div>
-											{pastEvent.winner ? (
+											{pastEvent.winners.length > 0 ? (
 												<div className="space-y-2">
 													<p className="text-sm font-medium text-muted-foreground">
-														Winner
+														Winners
 													</p>
 													<div className="space-y-1">
-														<p className="font-medium">
-															{pastEvent.winner.name}
-														</p>
-														<p className="text-sm text-muted-foreground">
-															{pastEvent.winner.city}
-														</p>
-														<p className="text-xs text-muted-foreground">
-															Entry ID: {pastEvent.winner.entry_id}
-														</p>
+														{pastEvent.winners.map((winner) => (
+															<div key={winner.entry_id} className="text-sm">
+																<p className="font-medium">{winner.name}</p>
+																<p className="text-muted-foreground">
+																	{winner.city}
+																</p>
+															</div>
+														))}
 													</div>
 												</div>
 											) : (
 												<p className="text-sm text-muted-foreground">
-													No winner selected
+													No winners selected
 												</p>
 											)}
 										</div>

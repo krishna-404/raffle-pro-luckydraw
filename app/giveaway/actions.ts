@@ -19,15 +19,35 @@ export type ActiveEvent = {
 	prizes: Prize[];
 };
 
+export type Winner = {
+	name: string;
+	city: string;
+	entry_id: string;
+	prize_id: string;
+};
+
 export type PastEvent = {
 	id: string;
 	name: string;
 	end_date: string;
-	winner: {
-		name: string;
-		city: string;
-		entry_id: string;
-	} | null;
+	winners: Winner[];
+};
+
+export type EventWithPrizes = {
+	id: string;
+	name: string;
+	description: string | null;
+	start_date: string;
+	end_date: string;
+	prizes: Prize[];
+	winners: Winner[];
+};
+
+type EventEntry = {
+	id: string;
+	name: string;
+	city: string;
+	prize_id: string | null;
 };
 
 export async function getActiveEvent(): Promise<ActiveEvent | null> {
@@ -89,13 +109,61 @@ export async function getPastEvents(): Promise<PastEvent[]> {
 
 	return events.map((event) => ({
 		...event,
-		winner: event.event_entries?.find((entry) => entry.prize_id)
-			? {
-					name: event.event_entries.find((entry) => entry.prize_id)?.name || "",
-					city: event.event_entries.find((entry) => entry.prize_id)?.city || "",
-					entry_id:
-						event.event_entries.find((entry) => entry.prize_id)?.id || "",
-				}
-			: null,
+		winners: event.event_entries
+			.filter((entry: EventEntry) => entry.prize_id)
+			.map((entry: EventEntry) => ({
+				name: entry.name,
+				city: entry.city,
+				entry_id: entry.id,
+				prize_id: entry.prize_id || "",
+			})),
 	}));
+}
+
+export async function getEventById(
+	eventId: string,
+): Promise<EventWithPrizes | null> {
+	const supabase = await createClient();
+
+	const { data: event, error } = await supabase
+		.from("events")
+		.select(`
+      *,
+      prizes (
+        id,
+        name,
+        description,
+        image_url,
+        seniority_index
+      ),
+      event_entries!inner (
+        id,
+        name,
+        city,
+        prize_id
+      )
+    `)
+		.eq("id", eventId)
+		.single();
+
+	if (error) {
+		console.error("Error fetching event:", error);
+		return null;
+	}
+
+	if (!event) {
+		return null;
+	}
+
+	return {
+		...event,
+		winners: event.event_entries
+			.filter((entry: EventEntry) => entry.prize_id)
+			.map((entry: EventEntry) => ({
+				name: entry.name,
+				city: entry.city,
+				entry_id: entry.id,
+				prize_id: entry.prize_id || "",
+			})),
+	};
 }
