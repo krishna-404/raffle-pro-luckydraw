@@ -1,5 +1,6 @@
 "use server";
 
+import { messageService } from "@/lib/message-service";
 import { createClient } from "@/utils/supabase/server";
 
 export type Event = {
@@ -153,6 +154,41 @@ export async function getEventWinners(eventId: string): Promise<Winner[]> {
 	}));
 }
 
+/**
+ * Sends a notification message to the winner about their prize
+ * This function is designed to be non-blocking (fire and forget)
+ */
+function sendWinnerNotification(
+	winnerName: string,
+	winnerMobile: string,
+	eventName: string,
+	prizeName: string,
+	entryId: string,
+	eventId: string,
+) {
+	// Don't await this promise to keep it non-blocking
+	messageService
+		.sendMessage(
+			{
+				mobiles: winnerMobile,
+				part_name: winnerName,
+				event_name: eventName,
+				prize_name: prizeName,
+				part_id: entryId,
+				event_id: eventId,
+			},
+			process.env.MSG91_WINNER_TEMPLATE_ID,
+		)
+		.then((result) => {
+			if (!result.success) {
+				console.error("Failed to send winner notification:", result.error);
+			}
+		})
+		.catch((error) => {
+			console.error("Error sending winner notification:", error);
+		});
+}
+
 export async function findEventWinners(
 	eventId: string,
 ): Promise<{ error?: string; winnersCount?: number }> {
@@ -188,10 +224,10 @@ export async function findEventWinners(
 		};
 	}
 
-	// Get all prizes for the event
+	// Get all prizes for the event, ordered by seniority
 	const { data: prizes, error: prizesError } = await supabase
 		.from("prizes")
-		.select("id, seniority_index")
+		.select("id, name, seniority_index")
 		.eq("event_id", eventId)
 		.order("seniority_index", { ascending: true });
 
@@ -200,51 +236,74 @@ export async function findEventWinners(
 		return { error: "No prizes found for this event" };
 	}
 
-	// Get all entries for the event
-	const { data: entries, error: entriesError } = await supabase
-		.from("event_entries")
-		.select("id")
-		.eq("event_id", eventId)
-		.is("prize_id", null); // Only get entries that haven't won yet
+	// Track phone numbers that have already won to prevent duplicates
+	const winningPhoneNumbers = new Set<string>();
 
-	if (entriesError || !entries) {
-		console.error("Error fetching entries:", entriesError);
-		return { error: "Failed to fetch entries" };
-	}
+	// Process each prize in order of seniority
+	for (const prize of prizes) {
+		try {
+			// Get all eligible entries (not won yet) for this event
+			let query = supabase
+				.from("event_entries")
+				.select("id, name, whatsapp_number")
+				.eq("event_id", eventId)
+				.is("prize_id", null); // Only get entries that haven't won yet
 
-	if (entries.length === 0) {
-		return { error: "No eligible entries found for this event" };
-	}
+			// Only add the phone number filter if there are winning numbers
+			if (winningPhoneNumbers.size > 0) {
+				// Convert Set to array for the query
+				const phoneNumbers = Array.from(winningPhoneNumbers);
 
-	if (entries.length < prizes.length) {
-		return {
-			error: `Not enough entries (${entries.length}) for the number of prizes (${prizes.length})`,
-		};
-	}
+				// Use separate .neq filters for each phone number
+				for (const phone of phoneNumbers) {
+					query = query.neq("whatsapp_number", phone);
+				}
+			}
 
-	// Shuffle entries to randomize selection
-	const shuffledEntries = [...entries].sort(() => Math.random() - 0.5);
+			const { data: entries, error: entriesError } = await query;
 
-	// Select winners (one for each prize)
-	const winners = prizes.map((prize, index) => ({
-		entryId: shuffledEntries[index].id,
-		prizeId: prize.id,
-	}));
+			if (entriesError) {
+				throw entriesError;
+			}
 
-	// Update entries with prize assignments
-	for (const winner of winners) {
-		const { error: updateError } = await supabase
-			.from("event_entries")
-			.update({ prize_id: winner.prizeId })
-			.eq("id", winner.entryId);
+			if (!entries || entries.length === 0) {
+				return {
+					error: `Not enough unique eligible entries for prize "${prize.name}". Some phone numbers may have already won other prizes.`,
+				};
+			}
 
-		if (updateError) {
-			console.error("Error updating entry with prize:", updateError);
-			return { error: "Failed to assign prizes to winners" };
+			// Randomly select a winner from eligible entries
+			const winner = entries[Math.floor(Math.random() * entries.length)];
+
+			// Update entry with prize assignment
+			const { error: updateError } = await supabase
+				.from("event_entries")
+				.update({ prize_id: prize.id })
+				.eq("id", winner.id);
+
+			if (updateError) {
+				throw updateError;
+			}
+
+			// Add winner's phone number to the set of winning numbers
+			winningPhoneNumbers.add(winner.whatsapp_number);
+
+			// Send notification to winner (non-blocking)
+			sendWinnerNotification(
+				winner.name,
+				winner.whatsapp_number,
+				event.name,
+				prize.name,
+				winner.id,
+				eventId,
+			);
+		} catch (error) {
+			console.error(`Error processing prize ${prize.name}:`, error);
+			return { error: "Failed to process winners. Please try again." };
 		}
 	}
 
-	return { winnersCount: winners.length };
+	return { winnersCount: prizes.length };
 }
 
 export async function deleteEvent(eventId: string) {
