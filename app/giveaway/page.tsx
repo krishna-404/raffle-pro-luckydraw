@@ -4,10 +4,16 @@ import { QrCodeScanner } from "@/app/components/QrCodeScanner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { differenceInSeconds } from "date-fns";
+import { differenceInSeconds, format } from "date-fns";
 import { QrCode } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
-import { type ActiveEvent, getActiveEvent } from "./actions";
+import {
+	type ActiveEvent,
+	type PastEvent,
+	getActiveEvent,
+	getPastEvents,
+} from "./actions";
 
 function CountdownTimer({ endDate }: { endDate: string }) {
 	const [timeLeft, setTimeLeft] = useState("");
@@ -49,21 +55,26 @@ function CountdownTimer({ endDate }: { endDate: string }) {
 
 export default function GiveawayPage() {
 	const [event, setEvent] = useState<ActiveEvent | null>(null);
+	const [pastEvents, setPastEvents] = useState<PastEvent[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [isQrScannerOpen, setIsQrScannerOpen] = useState(false);
 
 	useEffect(() => {
-		const fetchEvent = async () => {
+		const fetchData = async () => {
 			try {
-				const data = await getActiveEvent();
-				setEvent(data);
+				const [activeEvent, pastEventsData] = await Promise.all([
+					getActiveEvent(),
+					getPastEvents(),
+				]);
+				setEvent(activeEvent);
+				setPastEvents(pastEventsData);
 			} catch (error) {
-				console.error("Failed to fetch active event:", error);
+				console.error("Failed to fetch data:", error);
 			} finally {
 				setLoading(false);
 			}
 		};
-		fetchEvent();
+		fetchData();
 	}, []);
 
 	if (loading) {
@@ -76,112 +87,166 @@ export default function GiveawayPage() {
 		);
 	}
 
-	if (!event) {
-		return (
-			<div className="min-h-screen flex items-center justify-center">
-				<div className="text-center space-y-4">
-					<h1 className="text-3xl font-bold">No Active Giveaway</h1>
-					<p className="text-muted-foreground">
-						Check back later for new giveaways!
-					</p>
-				</div>
-			</div>
-		);
-	}
-
 	return (
 		<main className="min-h-screen py-20 px-4">
 			<div className="container mx-auto max-w-6xl">
-				{/* Hero Section */}
-				<div className="text-center space-y-6 mb-16">
-					<div className="flex justify-center mb-6">
-						<img
-							src="/kayaan-logo.jpeg"
-							alt="Kayaan Logo"
-							className="h-24 md:h-32 object-contain"
-						/>
-					</div>
-					<h1 className="text-4xl md:text-6xl font-serif font-bold">
-						{event.name}
-					</h1>
-					{event.description && (
-						<p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-							{event.description}
-						</p>
-					)}
-					<div className="space-y-2">
-						<p className="text-sm uppercase tracking-wider text-muted-foreground">
-							Giveaway Ends In
-						</p>
-						<CountdownTimer endDate={event.end_date} />
-					</div>
-					<Button
-						size="lg"
-						className="mt-8"
-						onClick={() => setIsQrScannerOpen(true)}
-					>
-						<QrCode className="mr-2 h-5 w-5" />
-						Scan QR Code to Enter
-					</Button>
+				<div className="flex justify-center mb-6">
+					<img
+						src="/kayaan-logo.jpeg"
+						alt="Kayaan Logo"
+						className="h-24 md:h-32 object-contain"
+					/>
 				</div>
+				{/* Hero Section */}
+				{event ? (
+					<>
+						<div className="text-center space-y-6 mb-16">
+							<h1 className="text-4xl md:text-6xl font-serif font-bold">
+								{event.name}
+							</h1>
+							{event.description && (
+								<p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+									{event.description}
+								</p>
+							)}
+							<div className="space-y-2">
+								<p className="text-sm uppercase tracking-wider text-muted-foreground">
+									Giveaway Ends In
+								</p>
+								<CountdownTimer endDate={event.end_date} />
+							</div>
+							<Button
+								size="lg"
+								className="mt-8"
+								onClick={() => setIsQrScannerOpen(true)}
+							>
+								<QrCode className="mr-2 h-5 w-5" />
+								Scan QR Code to Enter
+							</Button>
+						</div>
 
-				{/* QR Code Scanner Dialog */}
-				<QrCodeScanner
-					isOpen={isQrScannerOpen}
-					onClose={() => setIsQrScannerOpen(false)}
-				/>
+						{/* QR Code Scanner Dialog */}
+						<QrCodeScanner
+							isOpen={isQrScannerOpen}
+							onClose={() => setIsQrScannerOpen(false)}
+						/>
 
-				{/* Prizes Section */}
-				<div className="space-y-8">
-					<h2 className="text-3xl font-serif text-center">Prizes</h2>
-					<div
-						className={cn(
-							"grid gap-6 mx-auto",
-							"grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
-							"max-w-[400px] md:max-w-none", // Constrain single column width
-							{
-								"md:grid-cols-1 lg:grid-cols-1 md:max-w-[400px]":
-									event.prizes.length === 1,
-								"md:grid-cols-2 lg:grid-cols-2 md:max-w-[850px]":
-									event.prizes.length === 2,
-								"md:max-w-none": event.prizes.length >= 3,
-							},
-						)}
-					>
-						{event.prizes
-							.sort((a, b) => a.seniority_index - b.seniority_index)
-							.map((prize, index) => (
-								<Card
-									key={prize.id}
-									className="overflow-hidden transition-transform hover:scale-105"
-								>
-									{prize.image_url ? (
-										<div className="aspect-[4/3] relative">
-											<img
-												src={prize.image_url}
-												alt={prize.name}
-												className="absolute inset-0 w-full h-full object-cover"
-											/>
-										</div>
-									) : (
-										<div className="aspect-[4/3] bg-muted flex items-center justify-center">
-											<div className="text-4xl font-bold text-muted-foreground">
-												{index + 1}
-											</div>
-										</div>
-									)}
+						{/* Prizes Section */}
+						<div className="space-y-8">
+							<h2 className="text-3xl font-serif text-center">Prizes</h2>
+							<div
+								className={cn(
+									"grid gap-6 mx-auto",
+									"grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
+									"max-w-[400px] md:max-w-none", // Constrain single column width
+									{
+										"md:grid-cols-1 lg:grid-cols-1 md:max-w-[400px]":
+											event.prizes.length === 1,
+										"md:grid-cols-2 lg:grid-cols-2 md:max-w-[850px]":
+											event.prizes.length === 2,
+										"md:max-w-none": event.prizes.length >= 3,
+									},
+								)}
+							>
+								{event.prizes
+									.sort((a, b) => a.seniority_index - b.seniority_index)
+									.map((prize, index) => (
+										<Card
+											key={prize.id}
+											className="overflow-hidden transition-transform hover:scale-105"
+										>
+											{prize.image_url ? (
+												<div className="aspect-[4/3] relative">
+													<img
+														src={prize.image_url}
+														alt={prize.name}
+														className="absolute inset-0 w-full h-full object-cover"
+													/>
+												</div>
+											) : (
+												<div className="aspect-[4/3] bg-muted flex items-center justify-center">
+													<div className="text-4xl font-bold text-muted-foreground">
+														{index + 1}
+													</div>
+												</div>
+											)}
+											<CardContent className="p-6">
+												<div className="space-y-2">
+													<h3 className="text-xl font-semibold">
+														{prize.name}
+													</h3>
+													{prize.description && (
+														<p className="text-muted-foreground">
+															{prize.description}
+														</p>
+													)}
+												</div>
+											</CardContent>
+										</Card>
+									))}
+							</div>
+						</div>
+					</>
+				) : (
+					<div className="my-20 flex items-center justify-center">
+						<div className="text-center space-y-4">
+							<h1 className="text-3xl font-bold">No Active Giveaway</h1>
+							<p className="text-muted-foreground">
+								Check back later for new giveaways!
+							</p>
+						</div>
+					</div>
+				)}
+
+				{/* Past Events Section */}
+				<div className="mt-20 space-y-8">
+					<h2 className="text-3xl font-serif text-center">Past Events</h2>
+					<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+						{pastEvents.map((pastEvent) => (
+							<Link
+								key={pastEvent.id}
+								href={`/giveaway/${pastEvent.id}`}
+								className="block"
+							>
+								<Card className="h-full transition-transform hover:scale-105">
 									<CardContent className="p-6">
-										<div className="space-y-2">
-											<h3 className="text-xl font-semibold">{prize.name}</h3>
-											{prize.description && (
-												<p className="text-muted-foreground">
-													{prize.description}
+										<div className="space-y-4">
+											<div>
+												<h3 className="text-xl font-semibold">
+													{pastEvent.name}
+												</h3>
+												<p className="text-sm text-muted-foreground">
+													Ended on{" "}
+													{format(new Date(pastEvent.end_date), "MMM dd, yyyy")}
+												</p>
+											</div>
+											{pastEvent.winner ? (
+												<div className="space-y-2">
+													<p className="text-sm font-medium text-muted-foreground">
+														Winner
+													</p>
+													<div className="space-y-1">
+														<p className="font-medium">
+															{pastEvent.winner.name}
+														</p>
+														<p className="text-sm text-muted-foreground">
+															{pastEvent.winner.city}
+														</p>
+														<p className="text-xs text-muted-foreground">
+															Entry ID: {pastEvent.winner.entry_id}
+														</p>
+													</div>
+												</div>
+											) : (
+												<p className="text-sm text-muted-foreground">
+													No winner selected
 												</p>
 											)}
 										</div>
 									</CardContent>
 								</Card>
-							))}
+							</Link>
+						))}
 					</div>
 				</div>
 			</div>
