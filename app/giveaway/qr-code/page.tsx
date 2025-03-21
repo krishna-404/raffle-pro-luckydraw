@@ -71,6 +71,7 @@ function QrCodePageContent() {
 			name: "",
 			email: "",
 			whatsappNumber: "",
+			companyName: "",
 			address: "",
 			city: "",
 			pincode: "",
@@ -244,6 +245,20 @@ function QrCodePageContent() {
 													placeholder="10-digit mobile number"
 													{...field}
 												/>
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+
+								<FormField
+									control={form.control}
+									name="companyName"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Company Name (Optional)</FormLabel>
+											<FormControl>
+												<Input placeholder="Your company name" {...field} />
 											</FormControl>
 											<FormMessage />
 										</FormItem>

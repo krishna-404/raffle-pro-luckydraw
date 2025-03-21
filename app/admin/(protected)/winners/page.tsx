@@ -110,6 +110,7 @@ export default function WinnersPage() {
 								<TableHead>Prize</TableHead>
 								<TableHead>Email</TableHead>
 								<TableHead>WhatsApp</TableHead>
+								<TableHead>Company</TableHead>
 								<TableHead>City</TableHead>
 								<TableHead>Created At</TableHead>
 								<TableHead>Actions</TableHead>
@@ -141,6 +142,7 @@ export default function WinnersPage() {
 										</TableCell>
 										<TableCell>{winner.email || "-"}</TableCell>
 										<TableCell>{winner.whatsapp_number}</TableCell>
+										<TableCell>{winner.company_name || "-"}</TableCell>
 										<TableCell>{winner.city}</TableCell>
 										<TableCell>
 											{format(new Date(winner.created_at), "PPp")}

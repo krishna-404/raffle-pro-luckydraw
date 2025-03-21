@@ -406,6 +406,7 @@ export async function submitEntry(
 			name: data.name,
 			email: data.email || null,
 			whatsapp_number: data.whatsappNumber,
+			company_name: data.companyName || null,
 			address: data.address,
 			city: data.city,
 			pincode: data.pincode,

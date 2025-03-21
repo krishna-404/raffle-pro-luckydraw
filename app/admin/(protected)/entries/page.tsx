@@ -109,6 +109,7 @@ export default function EntriesPage() {
 								<TableHead>Name</TableHead>
 								<TableHead>Email</TableHead>
 								<TableHead>WhatsApp</TableHead>
+								<TableHead>Company</TableHead>
 								<TableHead>City</TableHead>
 								<TableHead>Pincode</TableHead>
 								<TableHead>QR Code</TableHead>
@@ -138,6 +139,7 @@ export default function EntriesPage() {
 										<TableCell>{entry.name}</TableCell>
 										<TableCell>{entry.email || "-"}</TableCell>
 										<TableCell>{entry.whatsapp_number}</TableCell>
+										<TableCell>{entry.company_name || "-"}</TableCell>
 										<TableCell>{entry.city}</TableCell>
 										<TableCell>{entry.pincode}</TableCell>
 										<TableCell>

@@ -155,6 +155,10 @@ export function WinnerDetails({ winner, isOpen, onClose }: WinnerDetailsProps) {
 						<div className="col-span-3">{winner.whatsapp_number}</div>
 					</div>
 					<div className="grid grid-cols-4 items-center gap-4">
+						<div className="font-medium">Company:</div>
+						<div className="col-span-3">{winner.company_name || "-"}</div>
+					</div>
+					<div className="grid grid-cols-4 items-center gap-4">
 						<div className="font-medium">Address:</div>
 						<div className="col-span-3">{winner.address}</div>
 					</div>

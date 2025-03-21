@@ -155,6 +155,10 @@ export function EntryDetails({ entry, isOpen, onClose }: EntryDetailsProps) {
 						<div className="col-span-3">{entry.whatsapp_number}</div>
 					</div>
 					<div className="grid grid-cols-4 items-center gap-4">
+						<div className="font-medium">Company:</div>
+						<div className="col-span-3">{entry.company_name || "-"}</div>
+					</div>
+					<div className="grid grid-cols-4 items-center gap-4">
 						<div className="font-medium">Address:</div>
 						<div className="col-span-3">{entry.address}</div>
 					</div>

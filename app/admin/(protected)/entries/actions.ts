@@ -9,6 +9,7 @@ export type Entry = {
 	name: string;
 	email: string | null;
 	whatsapp_number: string;
+	company_name: string | null;
 	address: string;
 	city: string;
 	pincode: string;

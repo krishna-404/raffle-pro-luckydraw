@@ -7,6 +7,7 @@ export type Winner = {
 	name: string;
 	email: string | null;
 	whatsapp_number: string;
+	company_name: string | null;
 	address: string;
 	city: string;
 	pincode: string;
@@ -23,6 +24,7 @@ type WinnerRawData = {
 	name: string;
 	email: string | null;
 	whatsapp_number: string;
+	company_name: string | null;
 	address: string;
 	city: string;
 	pincode: string;
@@ -70,6 +72,7 @@ export async function getWinners(
       name,
       email,
       whatsapp_number,
+      company_name,
       address,
       city,
       pincode,
@@ -97,6 +100,7 @@ export async function getWinners(
 		name: winner.name,
 		email: winner.email,
 		whatsapp_number: winner.whatsapp_number,
+		company_name: winner.company_name,
 		address: winner.address,
 		city: winner.city,
 		pincode: winner.pincode,
@@ -128,6 +132,7 @@ export async function getWinnersByEvent(eventId: string): Promise<Winner[]> {
       name,
       email,
       whatsapp_number,
+      company_name,
       address,
       city,
       pincode,
@@ -153,6 +158,7 @@ export async function getWinnersByEvent(eventId: string): Promise<Winner[]> {
 		name: winner.name,
 		email: winner.email,
 		whatsapp_number: winner.whatsapp_number,
+		company_name: winner.company_name,
 		address: winner.address,
 		city: winner.city,
 		pincode: winner.pincode,
