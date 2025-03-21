@@ -173,8 +173,19 @@ export async function findEventWinners(
 	// Check if event has started
 	const now = new Date();
 	const startDate = new Date(event.start_date);
+	const endDate = new Date(event.end_date);
+	// Set end date to end of day (23:59:59.999) for proper comparison
+	endDate.setHours(23, 59, 59, 999);
+
 	if (startDate > now) {
 		return { error: "Event has not started yet" };
+	}
+
+	if (endDate > now) {
+		return {
+			error:
+				"Event has not ended yet. Please wait until the end date to select winners.",
+		};
 	}
 
 	// Get all prizes for the event

@@ -230,14 +230,18 @@ export default function EventsPage() {
 													size="icon"
 													onClick={() => handleWinnerButtonClick(event.id)}
 													disabled={
-														event.status === "upcoming" || findingWinners
+														event.status === "upcoming" ||
+														event.status === "active" ||
+														findingWinners
 													}
 													title={
 														event.status === "upcoming"
 															? "Event has not started yet"
-															: event.winner_count > 0
-																? "View winners"
-																: "Find winners"
+															: event.status === "active"
+																? "Event has not ended yet"
+																: event.winner_count > 0
+																	? "View winners"
+																	: "Find winners"
 													}
 												>
 													<Gift
