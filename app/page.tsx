@@ -1,4 +1,5 @@
 import { generateMetadata as baseGenerateMetadata } from "@/app/lib/metadata";
+import { AppDownloadBanner } from "@/components/app-download-banner";
 import { Button } from "@/components/ui/button";
 import type { Metadata } from "next";
 import Image from "next/image";
@@ -345,6 +346,7 @@ export default function Home() {
 					</div>
 				</div>
 			</section>
+			<AppDownloadBanner />
 		</main>
 	);
 }
