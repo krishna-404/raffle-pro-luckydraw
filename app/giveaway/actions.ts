@@ -146,7 +146,7 @@ export async function getPastEvents(): Promise<PastEvent[]> {
 export async function getEventById(
 	eventId: string,
 ): Promise<EventWithPrizes | null> {
-	const supabase = await createClient();
+	const supabase = await createServiceRoleClient();
 
 	const { data: event, error } = await supabase
 		.from("events")
@@ -159,7 +159,7 @@ export async function getEventById(
         image_url,
         seniority_index
       ),
-      event_entries!inner (
+      event_entries!left (
         id,
         name,
         city,
