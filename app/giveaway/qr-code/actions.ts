@@ -2,7 +2,7 @@
 
 import { messageService } from "@/lib/message-service";
 import type { Database } from "@/types/supabase";
-import { createClient } from "@/utils/supabase/server";
+import { createServiceRoleClient } from "@/utils/supabase/server";
 import { cookies, headers } from "next/headers";
 import type { EntryFormData } from "./types";
 
@@ -41,7 +41,7 @@ const MAX_ATTEMPTS = 5; // Maximum attempts per IP per hour
 async function checkRateLimit(
 	ip: string,
 ): Promise<{ isLimited: boolean; nextTryTimestamp?: number }> {
-	const supabase = await createClient();
+	const supabase = await createServiceRoleClient();
 	const oneHourAgo = new Date(Date.now() - RATE_LIMIT_WINDOW * 1000);
 
 	// Get the most recent failed attempt
@@ -80,7 +80,7 @@ async function logAttempt(
 	success: boolean,
 	reason?: string,
 ) {
-	const supabase = await createClient();
+	const supabase = await createServiceRoleClient();
 
 	// Store the original input value and validate UUID format
 	let validQrCodeId: string | null = null;
@@ -172,7 +172,7 @@ function sendEntryNotification(
  * Implements rate limiting and attempt tracking
  */
 export async function validateQrCode(code: string) {
-	const supabase = await createClient();
+	const supabase = await createServiceRoleClient();
 	const headersList = await headers();
 	const ip = headersList.get("x-forwarded-for")?.split(",")[0] || "unknown";
 	const userAgent = headersList.get("user-agent") || "unknown";
@@ -319,7 +319,7 @@ export async function submitEntry(
 	eventId: string,
 	data: EntryFormData,
 ) {
-	const supabase = await createClient();
+	const supabase = await createServiceRoleClient();
 	const headersList = await headers();
 	const cookieStore = await cookies();
 
@@ -508,7 +508,7 @@ type EntryWithEvent = Database["public"]["Tables"]["event_entries"]["Row"] & {
  */
 export async function verifyEntry() {
 	const cookieStore = await cookies();
-	const supabase = await createClient();
+	const supabase = await createServiceRoleClient();
 
 	try {
 		// Get verification data from cookie
