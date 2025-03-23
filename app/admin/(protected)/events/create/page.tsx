@@ -504,7 +504,7 @@ export default function CreateEventPage() {
 																				<img
 																					src={URL.createObjectURL(value)}
 																					alt="Preview"
-																					className="h-full w-full rounded-lg object-cover"
+																					className="h-full w-full rounded-lg object-contain"
 																				/>
 																			</div>
 																		) : (
