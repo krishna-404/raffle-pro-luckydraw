@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/utils/supabase/server";
+import { createClient, createServiceRoleClient } from "@/utils/supabase/server";
 
 export type Prize = {
 	id: string;
@@ -24,12 +24,15 @@ export type Winner = {
 	city: string;
 	entry_id: string;
 	prize_id: string;
+	prize_name?: string;
 };
 
 export type PastEvent = {
 	id: string;
 	name: string;
+	description: string | null;
 	end_date: string;
+	prizes: Prize[];
 	winners: Winner[];
 };
 
@@ -81,24 +84,35 @@ export async function getActiveEvent(): Promise<ActiveEvent | null> {
 }
 
 export async function getPastEvents(): Promise<PastEvent[]> {
-	const supabase = await createClient();
+	const supabase = await createServiceRoleClient();
 
+	// Get today's date at start of day in IST
 	const now = new Date();
+	now.setHours(0, 0, 0, 0);
 
+	// First get all past events
 	const { data: events, error } = await supabase
 		.from("events")
 		.select(`
       id,
       name,
+      description,
       end_date,
-      event_entries!inner (
+      prizes!left (
+        id,
+        name,
+        description,
+        image_url,
+        seniority_index
+      ),
+      event_entries!left (
         id,
         name,
         city,
         prize_id
       )
     `)
-		.lt("end_date", now.toISOString().split("T")[0])
+		.lt("start_date", now.toISOString()) // Events that have started before today
 		.order("end_date", { ascending: false })
 		.limit(12);
 
@@ -107,17 +121,26 @@ export async function getPastEvents(): Promise<PastEvent[]> {
 		return [];
 	}
 
-	return events.map((event) => ({
-		...event,
-		winners: event.event_entries
+	const mappedEvents = events.map((event) => ({
+		id: event.id,
+		name: event.name,
+		description: event.description,
+		end_date: event.end_date,
+		prizes: event.prizes || [],
+		winners: (event.event_entries || [])
 			.filter((entry: EventEntry) => entry.prize_id)
-			.map((entry: EventEntry) => ({
-				name: entry.name,
-				city: entry.city,
-				entry_id: entry.id,
-				prize_id: entry.prize_id || "",
-			})),
+			.map((entry: EventEntry) => {
+				const prize = event.prizes?.find((p) => p.id === entry.prize_id);
+				return {
+					name: entry.name,
+					city: entry.city,
+					entry_id: entry.id,
+					prize_id: entry.prize_id || "",
+					prize_name: prize?.name || "Unknown Prize",
+				};
+			}),
 	}));
+	return mappedEvents;
 }
 
 export async function getEventById(

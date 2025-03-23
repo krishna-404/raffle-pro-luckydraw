@@ -199,55 +199,69 @@ export default function GiveawayPage() {
 				)}
 
 				{/* Past Events Section */}
-				<div className="mt-20 space-y-8">
-					<h2 className="text-3xl font-serif text-center">Past Events</h2>
-					<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-						{pastEvents.map((pastEvent) => (
-							<Link
-								key={pastEvent.id}
-								href={`/giveaway/${pastEvent.id}`}
-								className="block"
-							>
-								<Card className="h-full transition-transform hover:scale-105">
-									<CardContent className="p-6">
-										<div className="space-y-4">
-											<div>
-												<h3 className="text-xl font-semibold">
-													{pastEvent.name}
-												</h3>
-												<p className="text-sm text-muted-foreground">
-													Ended on{" "}
-													{format(new Date(pastEvent.end_date), "MMM dd, yyyy")}
-												</p>
-											</div>
-											{pastEvent.winners.length > 0 ? (
+				{pastEvents.length > 0 && (
+					<div className="mt-20 space-y-8">
+						<h2 className="text-3xl font-serif text-center">Past Events</h2>
+						<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+							{pastEvents.map((pastEvent) => (
+								<Link
+									key={pastEvent.id}
+									href={`/giveaway/${pastEvent.id}`}
+									className="block"
+								>
+									<Card className="h-full transition-transform hover:scale-105">
+										<CardContent className="p-6">
+											<div className="space-y-4">
+												<div>
+													<h3 className="text-xl font-semibold">
+														{pastEvent.name}
+													</h3>
+													<p className="text-sm text-muted-foreground">
+														Ended on{" "}
+														{format(
+															new Date(pastEvent.end_date),
+															"MMM dd, yyyy",
+														)}
+													</p>
+													{pastEvent.description && (
+														<p className="mt-2 text-muted-foreground">
+															{pastEvent.description}
+														</p>
+													)}
+												</div>
 												<div className="space-y-2">
 													<p className="text-sm font-medium text-muted-foreground">
-														Winners
+														{pastEvent.winners.length > 0
+															? "Winners"
+															: "Status"}
 													</p>
-													<div className="space-y-1">
-														{pastEvent.winners.map((winner) => (
-															<div key={winner.entry_id} className="text-sm">
-																<p className="font-medium">{winner.name}</p>
-																<p className="text-muted-foreground">
-																	{winner.city}
-																</p>
-															</div>
-														))}
-													</div>
+													{pastEvent.winners.length > 0 ? (
+														<div className="space-y-1">
+															{pastEvent.winners.map((winner) => (
+																<div key={winner.entry_id} className="text-sm">
+																	<p className="font-medium">{winner.name}</p>
+																	<p className="text-muted-foreground">
+																		{winner.city} • {winner.prize_name}
+																	</p>
+																</div>
+															))}
+														</div>
+													) : (
+														<div className="text-sm text-muted-foreground">
+															{pastEvent.prizes.length > 0
+																? "Winners not yet announced"
+																: "No prizes were offered"}
+														</div>
+													)}
 												</div>
-											) : (
-												<p className="text-sm text-muted-foreground">
-													No winners selected
-												</p>
-											)}
-										</div>
-									</CardContent>
-								</Card>
-							</Link>
-						))}
+											</div>
+										</CardContent>
+									</Card>
+								</Link>
+							))}
+						</div>
 					</div>
-				</div>
+				)}
 			</div>
 		</main>
 	);
